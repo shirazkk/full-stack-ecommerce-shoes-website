@@ -4,16 +4,17 @@ import { getUser, isAdmin } from '@/lib/auth/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getUser();
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const order = await getOrderById(params.id);
+    const order = await getOrderById(id);
 
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
@@ -37,9 +38,10 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getUser();
 
     if (!user) {
@@ -62,7 +64,7 @@ export async function PATCH(
       );
     }
 
-    const order = await updateOrderStatus(params.id, status);
+    const order = await updateOrderStatus(id, status);
 
     if (!order) {
       return NextResponse.json(

@@ -12,6 +12,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/hooks/use-cart';
+import { Product } from '@/types';
 
 export default function CartPage() {
   const { cartItems, cartCount, loading, updateQuantity, removeFromCart, clearCart } = useCart();

@@ -4,9 +4,10 @@ import { getUser } from '@/lib/auth/server';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { cartId: string } }
+  { params }: { params: Promise<{ cartId: string }> }
 ) {
   try {
+    const { cartId } = await params;
     const user = await getUser();
     const supabase = await createClient();
 
@@ -14,7 +15,7 @@ export async function PUT(
     const { data: cart, error: cartError } = await supabase
       .from('carts')
       .select('user_id, session_id')
-      .eq('id', params.cartId)
+      .eq('id', cartId)
       .single();
 
     if (cartError || !cart) {
@@ -36,7 +37,7 @@ export async function PUT(
     const { data, error } = await supabase
       .from('carts')
       .update({ status })
-      .eq('id', params.cartId)
+      .eq('id', cartId)
       .select()
       .single();
 
@@ -59,9 +60,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { cartId: string } }
+  { params }: { params: Promise<{ cartId: string }> }
 ) {
   try {
+    const { cartId } = await params;
     const user = await getUser();
     const supabase = await createClient();
 
@@ -69,7 +71,7 @@ export async function DELETE(
     const { data: cart, error: cartError } = await supabase
       .from('carts')
       .select('user_id, session_id')
-      .eq('id', params.cartId)
+      .eq('id', cartId)
       .single();
 
     if (cartError || !cart) {
@@ -88,7 +90,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('carts')
       .delete()
-      .eq('id', params.cartId);
+      .eq('id', cartId);
 
     if (error) {
       return NextResponse.json(

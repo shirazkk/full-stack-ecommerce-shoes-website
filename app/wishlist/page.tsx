@@ -11,6 +11,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useWishlist } from '@/hooks/use-wishlist';
 import { useCart } from '@/hooks/use-cart';
+import { Product } from '@/types';
 
 export default function WishlistPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -116,7 +117,9 @@ export default function WishlistPage() {
             ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
             : 'space-y-4'
         }>
-          {wishlist.map((product, index) => (
+          {wishlist.map((wishlistItem, index) => {
+            const product = wishlistItem.product;
+            return (
             <motion.div
               key={product.id}
               initial={{ opacity: 0, y: 20 }}
@@ -216,7 +219,8 @@ export default function WishlistPage() {
                 </CardContent>
               </Card>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
       </motion.div>
     </div>

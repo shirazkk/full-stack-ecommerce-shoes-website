@@ -18,12 +18,14 @@ export async function GET(request: NextRequest) {
     const isAdminUser = await isAdmin();
 
     let orders;
+    const offset = (page - 1) * limit;
+    
     if (isAdminUser) {
       // Admin can see all orders
-      orders = await getAllOrders(status, page, limit);
+      orders = await getAllOrders(status, limit, offset);
     } else {
       // Regular users can only see their own orders
-      orders = await getUserOrders(user.id, status, page, limit);
+      orders = await getUserOrders(user.id, status, limit, offset);
     }
 
     return NextResponse.json({ orders });

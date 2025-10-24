@@ -11,8 +11,8 @@ import { Separator } from '@/components/ui/separator';
 import { Heart, ShoppingCart, Star, Truck, Shield, RefreshCw, ArrowLeft, Plus, Minus } from 'lucide-react';
 import { Product } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { addToGuestCart, getGuestCart, isInGuestWishlist, addToGuestWishlist, removeFromGuestWishlist } from '@/lib/services/cart.service';
-import { isInGuestWishlist as isInWishlist, addToGuestWishlist as addToWishlist, removeFromGuestWishlist as removeFromWishlist } from '@/lib/services/wishlist.service';
+import { addToGuestCart } from '@/lib/services/cart.service';
+import { isInGuestWishlist, addToGuestWishlist, removeFromGuestWishlist } from '@/lib/services/wishlist.service';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -26,39 +26,49 @@ export default function ProductDetailPage() {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  // Mock product data - in real app, fetch from API
+  // Fetch product data from API
   useEffect(() => {
-    const mockProduct: Product = {
-      id: '1',
-      name: 'Nike Air Max 270',
-      slug: 'nike-air-max-270',
-      description: 'Experience ultimate comfort with the Nike Air Max 270. Featuring Nike\'s largest heel Air unit yet, it delivers a super-soft ride that feels as impossible as it looks. The Max Air unit provides lightweight cushioning that\'s visible from the side, while the mesh upper offers breathability and support.',
-      price: 150.00,
-      sale_price: 120.00,
-      brand: 'Nike',
-      colors: ['Black', 'White', 'Red', 'Navy'],
-      sizes: ['7', '7.5', '8', '8.5', '9', '9.5', '10', '10.5', '11', '11.5', '12'],
-      images: [
-        'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800&h=600&fit=crop',
-      ],
-      stock: 25,
-      is_featured: true,
-      is_new: true,
-      rating: 4.8,
-      reviews_count: 124,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/products/${params.slug}`);
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            setProduct(null);
+            return;
+          }
+          throw new Error('Failed to fetch product');
+        }
+        
+        const data = await response.json();
+        const productData = data.product;
+        
+        if (productData) {
+          setProduct(productData);
+          setSelectedColor(productData.colors?.[0] || 'Black');
+          setSelectedSize(productData.sizes?.[0] || 'M');
+          setIsWishlisted(isInGuestWishlist(productData.id));
+        } else {
+          setProduct(null);
+        }
+      } catch (error) {
+        console.error('Error fetching product:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load product. Please try again.',
+          variant: 'destructive',
+        });
+        setProduct(null);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setProduct(mockProduct);
-    setSelectedColor(mockProduct.colors[0]);
-    setSelectedSize(mockProduct.sizes[0]);
-    setIsWishlisted(isInWishlist(mockProduct.id));
-    setLoading(false);
-  }, [params.slug]);
+    if (params.slug) {
+      fetchProduct();
+    }
+  }, [params.slug, toast]);
 
   const handleAddToCart = async () => {
     if (!product || !selectedSize || !selectedColor) {
@@ -87,14 +97,14 @@ export default function ProductDetailPage() {
     if (!product) return;
 
     if (isWishlisted) {
-      removeFromWishlist(product.id);
+      removeFromGuestWishlist(product.id);
       setIsWishlisted(false);
       toast({
         title: 'Removed from Wishlist',
         description: `${product.name} has been removed from your wishlist.`,
       });
     } else {
-      addToWishlist(product.id);
+      addToGuestWishlist(product.id);
       setIsWishlisted(true);
       toast({
         title: 'Added to Wishlist',

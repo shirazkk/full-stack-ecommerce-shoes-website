@@ -4,15 +4,14 @@ import { getUser } from '@/lib/auth/server';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { productId: string } }
+  { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
+    const { productId } = await params;
     const user = await getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const { productId } = params;
 
     const supabase = await createClient();
     const { error } = await supabase

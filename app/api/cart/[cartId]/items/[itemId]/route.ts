@@ -4,9 +4,10 @@ import { getUser } from '@/lib/auth/server';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { cartId: string; itemId: string } }
+  { params }: { params: Promise<{ cartId: string; itemId: string }> }
 ) {
   try {
+    const { cartId, itemId } = await params;
     const user = await getUser();
     const supabase = await createClient();
 
@@ -14,7 +15,7 @@ export async function PUT(
     const { data: cart, error: cartError } = await supabase
       .from('carts')
       .select('user_id, session_id')
-      .eq('id', params.cartId)
+      .eq('id', cartId)
       .single();
 
     if (cartError || !cart) {
@@ -36,8 +37,8 @@ export async function PUT(
     const { data, error } = await supabase
       .from('cart_items')
       .update({ quantity, size, color })
-      .eq('id', params.itemId)
-      .eq('cart_id', params.cartId)
+      .eq('id', itemId)
+      .eq('cart_id', cartId)
       .select()
       .single();
 
@@ -60,9 +61,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { cartId: string; itemId: string } }
+  { params }: { params: Promise<{ cartId: string; itemId: string }> }
 ) {
   try {
+    const { cartId, itemId } = await params;
     const user = await getUser();
     const supabase = await createClient();
 
@@ -70,7 +72,7 @@ export async function DELETE(
     const { data: cart, error: cartError } = await supabase
       .from('carts')
       .select('user_id, session_id')
-      .eq('id', params.cartId)
+      .eq('id', cartId)
       .single();
 
     if (cartError || !cart) {
@@ -89,8 +91,8 @@ export async function DELETE(
     const { error } = await supabase
       .from('cart_items')
       .delete()
-      .eq('id', params.itemId)
-      .eq('cart_id', params.cartId);
+      .eq('id', itemId)
+      .eq('cart_id', cartId);
 
     if (error) {
       return NextResponse.json(

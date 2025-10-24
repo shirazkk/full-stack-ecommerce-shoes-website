@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { seedCategories, seedProducts } from '../lib/seed/products';
 
-const supabaseServiceRoleKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eXp4d2lkZWJvdnp4d2R4b2VwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTAzMzIwNSwiZXhwIjoyMDc2NjA5MjA1fQ.NCFdWLHte20uQze615G26w9D-zBU4nOME9KAb0j1qHA"
-const supabaseUrl = "https://pwyzxwidebovzxwdxoep.supabase.co"
+const supabaseServiceRoleKey = process.env.SERVICE_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 
 

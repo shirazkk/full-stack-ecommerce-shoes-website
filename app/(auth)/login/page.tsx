@@ -37,7 +37,10 @@ export default function LoginPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    const { user, error } = await signIn(values);
+    const { user, error } = await signIn({
+      email: values.email,
+      password: values.password,
+    });
 
     if (error) {
       toast({

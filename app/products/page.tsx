@@ -15,8 +15,8 @@ import { Slider } from '@/components/ui/slider';
 import { Heart, Search, Filter, Grid, List, Star, ShoppingCart } from 'lucide-react';
 import { Product } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { addToGuestCart, isInGuestWishlist, addToGuestWishlist, removeFromGuestWishlist } from '@/lib/services/cart.service';
-import { isInGuestWishlist as isInWishlist, addToGuestWishlist as addToWishlist, removeFromGuestWishlist as removeFromWishlist } from '@/lib/services/wishlist.service';
+import { addToGuestCart } from '@/lib/services/cart.service';
+import { isInGuestWishlist, addToGuestWishlist, removeFromGuestWishlist } from '@/lib/services/wishlist.service';
 
 const categories = [
   { id: 'all', name: 'All Products', slug: 'all' },
@@ -123,16 +123,16 @@ export default function ProductsPage() {
   }, [selectedCategory, searchQuery, selectedBrands, priceRange, sortBy, toast]);
 
   const handleWishlistToggle = (product: Product) => {
-    const isWishlisted = isInWishlist(product.id);
+    const isWishlisted = isInGuestWishlist(product.id);
     
     if (isWishlisted) {
-      removeFromWishlist(product.id);
+      removeFromGuestWishlist(product.id);
       toast({
         title: 'Removed from Wishlist',
         description: `${product.name} has been removed from your wishlist.`,
       });
     } else {
-      addToWishlist(product.id);
+      addToGuestWishlist(product.id);
       toast({
         title: 'Added to Wishlist',
         description: `${product.name} has been added to your wishlist.`,
@@ -141,39 +141,15 @@ export default function ProductsPage() {
   };
 
   const handleAddToCart = (product: Product) => {
-    addToGuestCart(product, product.sizes[0], product.colors[0], 1);
+    addToGuestCart(product, product.sizes?.[0] || 'M', product.colors?.[0] || 'Black', 1);
     toast({
       title: 'Added to Cart',
       description: `${product.name} has been added to your cart.`,
     });
   };
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.brand.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || product.brand === selectedCategory;
-    const matchesBrand = selectedBrands.length === 0 || selectedBrands.includes(product.brand);
-    const matchesPrice = product.sale_price 
-      ? (product.sale_price >= priceRange[0] && product.sale_price <= priceRange[1])
-      : (product.price >= priceRange[0] && product.price <= priceRange[1]);
-    
-    return matchesSearch && matchesCategory && matchesBrand && matchesPrice;
-  });
-
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    switch (sortBy) {
-      case 'price-low':
-        return (a.sale_price || a.price) - (b.sale_price || b.price);
-      case 'price-high':
-        return (b.sale_price || b.price) - (a.sale_price || a.price);
-      case 'rating':
-        return b.rating - a.rating;
-      case 'popular':
-        return b.reviews_count - a.reviews_count;
-      default:
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    }
-  });
+  // Products are already filtered and sorted by the API
+  const sortedProducts = products;
 
   if (loading) {
     return (
@@ -400,7 +376,7 @@ export default function ProductsPage() {
                           onClick={() => handleWishlistToggle(product)}
                         >
                           <Heart className={`h-5 w-5 ${
-                            isInWishlist(product.id) ? 'text-red-500 fill-current' : 'text-nike-gray-400'
+                            isInGuestWishlist(product.id) ? 'text-red-500 fill-current' : 'text-nike-gray-400'
                           }`} />
                         </Button>
                       </div>

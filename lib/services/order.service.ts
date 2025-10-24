@@ -91,12 +91,13 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
 
 export async function getUserOrders(
   userId: string,
+  status?: string,
   limit: number = 10,
   offset: number = 0
 ): Promise<Order[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('orders')
     .select(`
       *,
@@ -108,6 +109,12 @@ export async function getUserOrders(
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
+
+  if (status) {
+    query = query.eq('status', status);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('Error fetching user orders:', error);
@@ -165,12 +172,13 @@ export async function getOrdersByStatus(
 }
 
 export async function getAllOrders(
+  status?: string,
   limit: number = 50,
   offset: number = 0
 ): Promise<Order[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('orders')
     .select(`
       *,
@@ -181,6 +189,12 @@ export async function getAllOrders(
     `)
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
+
+  if (status) {
+    query = query.eq('status', status);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('Error fetching all orders:', error);
