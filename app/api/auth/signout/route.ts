@@ -1,15 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   try {
-    const cookieStore = cookies();
-    cookieStore.delete('auth-token');
+    const supabase = await createClient();
+    
+    const { error } = await supabase.auth.signOut();
 
-    return NextResponse.json({ success: true }, { status: 200 });
+    if (error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { message: 'Signed out successfully' },
+      { status: 200 }
+    );
   } catch (error: any) {
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     );
   }

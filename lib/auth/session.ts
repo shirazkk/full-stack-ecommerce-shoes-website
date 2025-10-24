@@ -1,16 +1,17 @@
 import { cookies } from 'next/headers';
-import { supabase } from '../supabase/client';
+import { createClient } from '../supabase/server';
 import { Profile } from '@/types';
 
 export async function getSession() {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const authToken = cookieStore.get('auth-token')?.value;
 
     if (!authToken) {
       return null;
     }
 
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from('profiles')
       .select('*')

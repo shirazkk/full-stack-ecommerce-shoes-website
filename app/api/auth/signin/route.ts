@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authenticateUser } from '@/lib/auth';
+import { authenticateUser } from '@/lib/auth/server';
+import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
-import { cookies } from 'next/headers';
 
 const signinSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -13,32 +13,35 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = signinSchema.parse(body);
 
-    const { user, error } = await authenticateUser(
+    const data = await authenticateUser(
       validatedData.email,
       validatedData.password
     );
 
-    if (error || !user) {
+    if (!data.user) {
       return NextResponse.json(
-        { error: error || 'Invalid credentials' },
+        { error: 'Invalid credentials' },
         { status: 401 }
       );
     }
 
-    const cookieStore = cookies();
-    cookieStore.set('auth-token', user.id, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-    });
+    // Get user profile
+    const supabase = await createClient();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, full_name, avatar_url, phone')
+      .eq('id', data.user.id)
+      .single();
 
     return NextResponse.json(
       {
         user: {
-          id: user.id,
-          email: user.email,
-          role: user.profile?.role || 'user',
+          id: data.user.id,
+          email: data.user.email,
+          role: profile?.role || 'user',
+          full_name: profile?.full_name,
+          avatar_url: profile?.avatar_url,
+          phone: profile?.phone,
         },
       },
       { status: 200 }
@@ -52,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     );
   }

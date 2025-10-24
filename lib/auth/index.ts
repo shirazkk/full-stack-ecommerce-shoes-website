@@ -1,129 +1,271 @@
-import bcrypt from 'bcryptjs';
-import { supabase } from '../supabase/client';
-import { Profile, User } from '@/types';
+import { createClient } from '@/lib/supabase/client';
+import { AuthError } from '@supabase/supabase-js';
+import { redirect } from 'next/navigation';
 
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10);
+export interface SignUpData {
+  email: string;
+  password: string;
+  fullName?: string;
+  phone?: string;
 }
 
-export async function verifyPassword(
-  password: string,
-  hashedPassword: string
-): Promise<boolean> {
-  return bcrypt.compare(password, hashedPassword);
+export interface SignInData {
+  email: string;
+  password: string;
 }
 
-export async function createUser(
-  email: string,
-  password: string,
-  fullName?: string
-): Promise<{ user: User | null; error: string | null }> {
-  try {
-    const hashedPassword = await hashPassword(password);
+export interface AuthUser {
+  id: string;
+  email: string;
+  role: 'user' | 'admin';
+  full_name?: string;
+  avatar_url?: string;
+  phone?: string;
+}
 
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password: hashedPassword,
-      options: {
-        data: {
-          full_name: fullName,
-        },
+/**
+ * Sign up a new user with email and password
+ */
+export async function signUp({ email, password, fullName, phone }: SignUpData) {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName,
+        phone,
       },
-    });
+    },
+  });
 
-    if (authError || !authData.user) {
-      return { user: null, error: authError?.message || 'Failed to create user' };
-    }
+  if (error) {
+    return { user: null, error: error.message };
+  }
 
-    const { data: profileData, error: profileError } = await supabase
+  // Create profile in profiles table
+  if (data.user) {
+    const { error: profileError } = await supabase
       .from('profiles')
       .insert({
-        id: authData.user.id,
-        email,
+        id: data.user.id,
+        email: data.user.email!,
         full_name: fullName,
+        phone,
         role: 'user',
-      })
-      .select()
-      .single();
-
-    if (profileError) {
-      return { user: null, error: profileError.message };
-    }
-
-    return {
-      user: {
-        id: authData.user.id,
-        email,
-        password: hashedPassword,
-        profile: profileData as Profile,
-      },
-      error: null,
-    };
-  } catch (error: any) {
-    return { user: null, error: error.message };
-  }
-}
-
-export async function authenticateUser(
-  email: string,
-  password: string
-): Promise<{ user: User | null; error: string | null }> {
-  try {
-    const { data: authData, error: authError } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password,
       });
 
-    if (authError || !authData.user) {
-      return { user: null, error: 'Invalid credentials' };
-    }
-
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', authData.user.id)
-      .single();
-
     if (profileError) {
-      return { user: null, error: profileError.message };
+      console.error('Error creating profile:', profileError);
+      return { user: null, error: 'Failed to create user profile.' };
     }
 
     return {
       user: {
-        id: authData.user.id,
-        email,
-        password: '',
-        profile: profileData as Profile,
+        id: data.user.id,
+        email: data.user.email!,
+        role: 'user',
+        full_name: fullName,
+        phone,
       },
       error: null,
     };
-  } catch (error: any) {
+  }
+
+  return { user: null, error: 'Sign up failed unexpectedly.' };
+}
+
+/**
+ * Sign in with email and password
+ */
+export async function signIn({ email, password }: SignInData) {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
     return { user: null, error: error.message };
+  }
+
+  if (data.user) {
+    // Get user profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, full_name, avatar_url, phone')
+      .eq('id', data.user.id)
+      .single();
+
+    return {
+      user: {
+        id: data.user.id,
+        email: data.user.email!,
+        role: profile?.role || 'user',
+        full_name: profile?.full_name,
+        avatar_url: profile?.avatar_url,
+        phone: profile?.phone,
+      },
+      error: null,
+    };
+  }
+
+  return { user: null, error: 'Sign in failed unexpectedly.' };
+}
+
+/**
+ * Sign in with OAuth provider (Google, GitHub, etc.)
+ */
+export async function signInWithOAuth(provider: 'google' | 'github') {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+    },
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { error: null };
+}
+
+/**
+ * Sign out the current user
+ */
+export async function signOut() {
+  const supabase = createClient();
+  
+  const { error } = await supabase.auth.signOut();
+  
+  if (error) {
+    throw new AuthError(error.message, error.status);
+  }
+
+  return { error };
+}
+
+/**
+ * Send password reset email
+ */
+export async function resetPassword(email: string) {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { error: null };
+}
+
+/**
+ * Update user password
+ */
+export async function updatePassword(newPassword: string) {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { error: null };
+}
+
+/**
+ * Get current session (client-side)
+ */
+export async function getSession() {
+  const supabase = createClient();
+  
+  const { data: { session }, error } = await supabase.auth.getSession();
+  
+  if (error) {
+    return { session: null, error: error.message };
+  }
+
+  return { session, error: null };
+}
+
+/**
+ * Get current user with profile (server-side)
+ */
+export async function getUser(): Promise<AuthUser | null> {
+  const supabase = createClient();
+  
+  const { data: { user }, error } = await supabase.auth.getUser();
+  
+  if (error || !user) {
+    return null;
+  }
+
+  // Get user profile
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  if (profileError || !profile) {
+    return null;
+  }
+
+  return {
+    id: user.id,
+    email: user.email!,
+    role: profile.role,
+    full_name: profile.full_name,
+    avatar_url: profile.avatar_url,
+    phone: profile.phone,
+  };
+}
+
+/**
+ * Check if user is authenticated (server-side)
+ */
+export async function isAuthenticated(): Promise<boolean> {
+  const user = await getUser();
+  return !!user;
+}
+
+/**
+ * Check if user is admin (server-side)
+ */
+export async function isAdmin(): Promise<boolean> {
+  const user = await getUser();
+  return user?.role === 'admin';
+}
+
+/**
+ * Require authentication - redirect to login if not authenticated
+ */
+export async function requireAuth(redirectTo: string = '/auth/login') {
+  const isAuth = await isAuthenticated();
+  
+  if (!isAuth) {
+    redirect(redirectTo);
   }
 }
 
-export async function getUserByEmail(
-  email: string
-): Promise<User | null> {
-  try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('email', email)
-      .single();
-
-    if (error || !data) {
-      return null;
-    }
-
-    return {
-      id: data.id,
-      email: data.email,
-      password: '',
-      profile: data as Profile,
-    };
-  } catch (error) {
-    return null;
+/**
+ * Require admin role - redirect to home if not admin
+ */
+export async function requireAdmin(redirectTo: string = '/') {
+  const isAdminUser = await isAdmin();
+  
+  if (!isAdminUser) {
+    redirect(redirectTo);
   }
 }

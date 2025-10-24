@@ -1,274 +1,408 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, ShoppingCart, Star, Truck, Shield } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { ProductCard } from '@/components/product-card';
+import { Separator } from '@/components/ui/separator';
+import { Heart, ShoppingCart, Star, Truck, Shield, RefreshCw, ArrowLeft, Plus, Minus } from 'lucide-react';
 import { Product } from '@/types';
-
-const product: Product = {
-  id: '1',
-  name: 'Air Max Ultra Running Shoes',
-  slug: 'air-max-ultra-running',
-  description:
-    'Experience ultimate comfort with our Air Max Ultra Running Shoes. Featuring advanced cushioning technology and breathable mesh upper, these shoes are designed for serious runners who demand the best. The lightweight construction and responsive sole provide exceptional energy return with every stride.',
-  price: 189.99,
-  sale_price: 149.99,
-  brand: 'KICKZ',
-  colors: ['Black', 'White', 'Blue'],
-  sizes: ['7', '8', '9', '10', '11'],
-  images: [
-    'https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?auto=compress&cs=tinysrgb&w=1200',
-    'https://images.pexels.com/photos/1464625/pexels-photo-1464625.jpeg?auto=compress&cs=tinysrgb&w=1200',
-    'https://images.pexels.com/photos/1598508/pexels-photo-1598508.jpeg?auto=compress&cs=tinysrgb&w=1200',
-  ],
-  stock: 50,
-  is_featured: true,
-  is_new: true,
-  rating: 4.8,
-  reviews_count: 124,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-};
-
-const relatedProducts: Product[] = [
-  {
-    id: '2',
-    name: 'Classic Leather Sneakers',
-    slug: 'classic-leather-sneakers',
-    description: 'Timeless design meets modern comfort',
-    price: 129.99,
-    brand: 'KICKZ',
-    colors: ['White', 'Black', 'Brown'],
-    sizes: ['7', '8', '9', '10', '11'],
-    images: [
-      'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=800',
-    ],
-    stock: 35,
-    is_featured: true,
-    is_new: false,
-    rating: 4.6,
-    reviews_count: 89,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    name: 'Sport Pro Basketball Shoes',
-    slug: 'sport-pro-basketball',
-    description: 'High-performance shoes for the court',
-    price: 159.99,
-    sale_price: 139.99,
-    brand: 'KICKZ',
-    colors: ['Red', 'Black', 'White'],
-    sizes: ['8', '9', '10', '11', '12'],
-    images: [
-      'https://images.pexels.com/photos/1456706/pexels-photo-1456706.jpeg?auto=compress&cs=tinysrgb&w=800',
-    ],
-    stock: 28,
-    is_featured: true,
-    is_new: false,
-    rating: 4.9,
-    reviews_count: 156,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
+import { useToast } from '@/hooks/use-toast';
+import { addToGuestCart, getGuestCart, isInGuestWishlist, addToGuestWishlist, removeFromGuestWishlist } from '@/lib/services/cart.service';
+import { isInGuestWishlist as isInWishlist, addToGuestWishlist as addToWishlist, removeFromGuestWishlist as removeFromWishlist } from '@/lib/services/wishlist.service';
 
 export default function ProductDetailPage() {
+  const params = useParams();
+  const { toast } = useToast();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  const discountPercentage =
-    product.sale_price && product.sale_price < product.price
-      ? Math.round(((product.price - product.sale_price) / product.price) * 100)
-      : 0;
+  // Mock product data - in real app, fetch from API
+  useEffect(() => {
+    const mockProduct: Product = {
+      id: '1',
+      name: 'Nike Air Max 270',
+      slug: 'nike-air-max-270',
+      description: 'Experience ultimate comfort with the Nike Air Max 270. Featuring Nike\'s largest heel Air unit yet, it delivers a super-soft ride that feels as impossible as it looks. The Max Air unit provides lightweight cushioning that\'s visible from the side, while the mesh upper offers breathability and support.',
+      price: 150.00,
+      sale_price: 120.00,
+      brand: 'Nike',
+      colors: ['Black', 'White', 'Red', 'Navy'],
+      sizes: ['7', '7.5', '8', '8.5', '9', '9.5', '10', '10.5', '11', '11.5', '12'],
+      images: [
+        'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800&h=600&fit=crop',
+      ],
+      stock: 25,
+      is_featured: true,
+      is_new: true,
+      rating: 4.8,
+      reviews_count: 124,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid lg:grid-cols-2 gap-12 mb-16">
-        <div className="space-y-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="aspect-square bg-slate-100 rounded-lg overflow-hidden"
-          >
-            <img
-              src={product.images[selectedImage]}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
-          </motion.div>
+    setProduct(mockProduct);
+    setSelectedColor(mockProduct.colors[0]);
+    setSelectedSize(mockProduct.sizes[0]);
+    setIsWishlisted(isInWishlist(mockProduct.id));
+    setLoading(false);
+  }, [params.slug]);
 
-          <div className="grid grid-cols-3 gap-4">
-            {product.images.map((image, index) => (
-              <button
-                key={index}
-                onClick={() => setSelectedImage(index)}
-                className={`aspect-square bg-slate-100 rounded-lg overflow-hidden border-2 transition-colors ${
-                  selectedImage === index
-                    ? 'border-primary'
-                    : 'border-transparent'
-                }`}
-              >
-                <img
-                  src={image}
-                  alt={`${product.name} view ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            ))}
-          </div>
-        </div>
+  const handleAddToCart = async () => {
+    if (!product || !selectedSize || !selectedColor) {
+      toast({
+        title: 'Please select size and color',
+        description: 'Choose your preferred size and color before adding to cart.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
-        <div className="space-y-6">
-          <div>
-            {product.brand && (
-              <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">
-                {product.brand}
-              </p>
-            )}
-            <h1 className="text-3xl md:text-4xl font-bold mb-3">
-              {product.name}
-            </h1>
+    setIsAddingToCart(true);
+    
+    // Add to guest cart (localStorage)
+    addToGuestCart(product, selectedSize, selectedColor, quantity);
+    
+    toast({
+      title: 'Added to Cart',
+      description: `${product.name} has been added to your cart.`,
+    });
+    
+    setIsAddingToCart(false);
+  };
 
-            <div className="flex items-center gap-4 mb-4">
-              <div className="flex items-center gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-5 w-5 ${
-                      i < Math.floor(product.rating)
-                        ? 'fill-yellow-400 text-yellow-400'
-                        : 'text-slate-300'
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-sm text-muted-foreground">
-                {product.rating} ({product.reviews_count} reviews)
-              </span>
-            </div>
+  const handleWishlistToggle = () => {
+    if (!product) return;
 
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-3xl font-bold">
-                ${(product.sale_price || product.price).toFixed(2)}
-              </span>
-              {product.sale_price && (
-                <>
-                  <span className="text-xl text-muted-foreground line-through">
-                    ${product.price.toFixed(2)}
-                  </span>
-                  <Badge variant="destructive">-{discountPercentage}%</Badge>
-                </>
-              )}
-            </div>
+    if (isWishlisted) {
+      removeFromWishlist(product.id);
+      setIsWishlisted(false);
+      toast({
+        title: 'Removed from Wishlist',
+        description: `${product.name} has been removed from your wishlist.`,
+      });
+    } else {
+      addToWishlist(product.id);
+      setIsWishlisted(true);
+      toast({
+        title: 'Added to Wishlist',
+        description: `${product.name} has been added to your wishlist.`,
+      });
+    }
+  };
 
-            {product.is_new && <Badge className="mb-4">New Arrival</Badge>}
-          </div>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-nike-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-nike-orange-500"></div>
+      </div>
+    );
+  }
 
-          <p className="text-muted-foreground leading-relaxed">
-            {product.description}
-          </p>
-
-          <div className="space-y-4">
-            <div>
-              <Label className="mb-3 block font-semibold">Select Size</Label>
-              <div className="grid grid-cols-5 gap-2">
-                {product.sizes.map((size) => (
-                  <Button
-                    key={size}
-                    variant={selectedSize === size ? 'default' : 'outline'}
-                    onClick={() => setSelectedSize(size)}
-                  >
-                    {size}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label className="mb-3 block font-semibold">Select Color</Label>
-              <div className="flex gap-2">
-                {product.colors.map((color) => (
-                  <Button
-                    key={color}
-                    variant={selectedColor === color ? 'default' : 'outline'}
-                    onClick={() => setSelectedColor(color)}
-                  >
-                    {color}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label className="mb-3 block font-semibold">Quantity</Label>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                >
-                  -
-                </Button>
-                <span className="w-12 text-center font-semibold">{quantity}</span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setQuantity(Math.min(10, quantity + 1))}
-                >
-                  +
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-4">
-            <Button size="lg" className="flex-1">
-              <ShoppingCart className="mr-2 h-5 w-5" />
-              Add to Cart
-            </Button>
-            <Button size="lg" variant="outline">
-              <Heart className="h-5 w-5" />
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 pt-6 border-t">
-            <div className="flex items-center gap-3">
-              <Truck className="h-5 w-5 text-primary" />
-              <div>
-                <p className="font-semibold text-sm">Free Shipping</p>
-                <p className="text-xs text-muted-foreground">Orders over $100</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Shield className="h-5 w-5 text-primary" />
-              <div>
-                <p className="font-semibold text-sm">Secure Payment</p>
-                <p className="text-xs text-muted-foreground">100% protected</p>
-              </div>
-            </div>
-          </div>
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-nike-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-nike-gray-900 mb-4">Product Not Found</h1>
+          <Link href="/products" className="btn-nike-primary">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Products
+          </Link>
         </div>
       </div>
+    );
+  }
 
-      <section>
-        <h2 className="text-2xl font-bold mb-6">You May Also Like</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {relatedProducts.map((relatedProduct) => (
-            <ProductCard key={relatedProduct.id} product={relatedProduct} />
-          ))}
+  return (
+    <div className="min-h-screen bg-nike-gray-50">
+      {/* Breadcrumb */}
+      <div className="container-nike py-4">
+        <nav className="flex items-center space-x-2 text-sm text-nike-gray-600">
+          <Link href="/" className="hover:text-nike-orange-500">Home</Link>
+          <span>/</span>
+          <Link href="/products" className="hover:text-nike-orange-500">Products</Link>
+          <span>/</span>
+          <span className="text-nike-gray-900">{product.name}</span>
+        </nav>
+      </div>
+
+      <div className="container-nike py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Product Images */}
+          <div className="space-y-4">
+            {/* Main Image */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              className="aspect-square relative overflow-hidden rounded-2xl bg-white"
+            >
+              <Image
+                src={product.images[selectedImage]}
+                alt={product.name}
+                fill
+                className="object-cover"
+                priority
+              />
+              {product.is_new && (
+                <Badge className="absolute top-4 left-4 bg-nike-orange-500 text-white">
+                  New
+                </Badge>
+              )}
+              {product.sale_price && (
+                <Badge className="absolute top-4 right-4 bg-red-500 text-white">
+                  Sale
+                </Badge>
+              )}
+            </motion.div>
+
+            {/* Thumbnail Images */}
+            <div className="grid grid-cols-4 gap-2">
+              {product.images.map((image, index) => (
+                <motion.button
+                  key={index}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSelectedImage(index)}
+                  className={`aspect-square relative overflow-hidden rounded-lg border-2 transition-all ${
+                    selectedImage === index
+                      ? 'border-nike-orange-500'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <Image
+                    src={image}
+                    alt={`${product.name} view ${index + 1}`}
+                    fill
+                    className="object-cover"
+                  />
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          {/* Product Info */}
+          <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h1 className="text-nike-display text-3xl font-bold text-nike-gray-900">
+                  {product.name}
+                </h1>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleWishlistToggle}
+                  className={`transition-colors ${
+                    isWishlisted
+                      ? 'text-red-500 hover:text-red-600'
+                      : 'text-nike-gray-400 hover:text-red-500'
+                  }`}
+                >
+                  <Heart className={`h-6 w-6 ${isWishlisted ? 'fill-current' : ''}`} />
+                </Button>
+              </div>
+
+              <div className="flex items-center space-x-4 mb-4">
+                <div className="flex items-center space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-4 w-4 ${
+                        i < Math.floor(product.rating)
+                          ? 'text-yellow-400 fill-current'
+                          : 'text-gray-300'
+                      }`}
+                    />
+                  ))}
+                  <span className="text-sm text-nike-gray-600 ml-2">
+                    {product.rating} ({product.reviews_count} reviews)
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-4 mb-6">
+                {product.sale_price ? (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-3xl font-bold text-nike-gray-900">
+                      ${product.sale_price}
+                    </span>
+                    <span className="text-xl text-nike-gray-500 line-through">
+                      ${product.price}
+                    </span>
+                    <Badge className="bg-red-500 text-white">
+                      {Math.round(((product.price - product.sale_price) / product.price) * 100)}% OFF
+                    </Badge>
+                  </div>
+                ) : (
+                  <span className="text-3xl font-bold text-nike-gray-900">
+                    ${product.price}
+                  </span>
+                )}
+              </div>
+
+              <p className="text-nike-body text-nike-gray-700 leading-relaxed">
+                {product.description}
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="space-y-6"
+            >
+              {/* Color Selection */}
+              <div>
+                <h3 className="text-lg font-semibold text-nike-gray-900 mb-3">Color</h3>
+                <div className="flex flex-wrap gap-3">
+                  {product.colors.map((color) => (
+                    <Button
+                      key={color}
+                      variant={selectedColor === color ? 'default' : 'outline'}
+                      onClick={() => setSelectedColor(color)}
+                      className={`transition-all ${
+                        selectedColor === color
+                          ? 'bg-nike-orange-500 text-white'
+                          : 'border-nike-gray-300 text-nike-gray-700 hover:border-nike-orange-500'
+                      }`}
+                    >
+                      {color}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Size Selection */}
+              <div>
+                <h3 className="text-lg font-semibold text-nike-gray-900 mb-3">Size</h3>
+                <div className="grid grid-cols-6 gap-2">
+                  {product.sizes.map((size) => (
+                    <Button
+                      key={size}
+                      variant={selectedSize === size ? 'default' : 'outline'}
+                      onClick={() => setSelectedSize(size)}
+                      className={`transition-all ${
+                        selectedSize === size
+                          ? 'bg-nike-orange-500 text-white'
+                          : 'border-nike-gray-300 text-nike-gray-700 hover:border-nike-orange-500'
+                      }`}
+                    >
+                      {size}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quantity */}
+              <div>
+                <h3 className="text-lg font-semibold text-nike-gray-900 mb-3">Quantity</h3>
+                <div className="flex items-center space-x-3">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    disabled={quantity <= 1}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span className="text-lg font-semibold w-8 text-center">{quantity}</span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setQuantity(quantity + 1)}
+                    disabled={quantity >= product.stock}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-sm text-nike-gray-600 mt-2">
+                  {product.stock} in stock
+                </p>
+              </div>
+
+              {/* Add to Cart Button */}
+              <Button
+                onClick={handleAddToCart}
+                disabled={isAddingToCart || !selectedSize || !selectedColor}
+                className="w-full btn-nike-primary text-lg py-6"
+              >
+                {isAddingToCart ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Adding to Cart...
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="h-5 w-5 mr-2" />
+                    Add to Cart - ${product.sale_price || product.price}
+                  </>
+                )}
+              </Button>
+
+              {/* Trust Badges */}
+              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-nike-gray-200">
+                <div className="flex items-center space-x-2 text-sm text-nike-gray-600">
+                  <Truck className="h-5 w-5 text-nike-orange-500" />
+                  <span>Free Shipping</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm text-nike-gray-600">
+                  <Shield className="h-5 w-5 text-nike-orange-500" />
+                  <span>Secure Payment</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm text-nike-gray-600">
+                  <RefreshCw className="h-5 w-5 text-nike-orange-500" />
+                  <span>Easy Returns</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         </div>
-      </section>
+
+        {/* Related Products */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="mt-16"
+        >
+          <h2 className="text-2xl font-bold text-nike-gray-900 mb-8">You Might Also Like</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Mock related products */}
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow">
+                <div className="aspect-square relative">
+                  <Image
+                    src={`https://images.unsplash.com/photo-${1549298916 + i}-b41d501d3772?w=400&h=400&fit=crop`}
+                    alt={`Related product ${i}`}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="font-semibold text-nike-gray-900 mb-2">Related Product {i}</h3>
+                  <p className="text-nike-orange-500 font-bold">$120.00</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
-}
-
-function Label({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <label className={className}>{children}</label>;
 }

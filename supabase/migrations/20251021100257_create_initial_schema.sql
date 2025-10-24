@@ -121,6 +121,11 @@ CREATE TABLE IF NOT EXISTS profiles (
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
+
 CREATE POLICY "Users can view own profile"
   ON profiles FOR SELECT
   TO authenticated
@@ -148,6 +153,11 @@ CREATE TABLE IF NOT EXISTS categories (
 );
 
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Anyone can view categories" ON categories;
+DROP POLICY IF EXISTS "Admins can insert categories" ON categories;
+DROP POLICY IF EXISTS "Admins can update categories" ON categories;
 
 CREATE POLICY "Anyone can view categories"
   ON categories FOR SELECT
@@ -207,6 +217,11 @@ CREATE TABLE IF NOT EXISTS products (
 
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Anyone can view products" ON products;
+DROP POLICY IF EXISTS "Admins can insert products" ON products;
+DROP POLICY IF EXISTS "Admins can update products" ON products;
+
 CREATE POLICY "Anyone can view products"
   ON products FOR SELECT
   TO anon, authenticated
@@ -252,6 +267,12 @@ CREATE TABLE IF NOT EXISTS carts (
 
 ALTER TABLE carts ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view own cart" ON carts;
+DROP POLICY IF EXISTS "Users can insert own cart" ON carts;
+DROP POLICY IF EXISTS "Users can update own cart" ON carts;
+DROP POLICY IF EXISTS "Users can delete own cart" ON carts;
+
 CREATE POLICY "Users can view own cart"
   ON carts FOR SELECT
   TO authenticated
@@ -286,6 +307,12 @@ CREATE TABLE IF NOT EXISTS cart_items (
 );
 
 ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view own cart items" ON cart_items;
+DROP POLICY IF EXISTS "Users can insert own cart items" ON cart_items;
+DROP POLICY IF EXISTS "Users can update own cart items" ON cart_items;
+DROP POLICY IF EXISTS "Users can delete own cart items" ON cart_items;
 
 CREATE POLICY "Users can view own cart items"
   ON cart_items FOR SELECT
@@ -349,6 +376,11 @@ CREATE TABLE IF NOT EXISTS wishlists (
 
 ALTER TABLE wishlists ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view own wishlist" ON wishlists;
+DROP POLICY IF EXISTS "Users can insert own wishlist items" ON wishlists;
+DROP POLICY IF EXISTS "Users can delete own wishlist items" ON wishlists;
+
 CREATE POLICY "Users can view own wishlist"
   ON wishlists FOR SELECT
   TO authenticated
@@ -381,6 +413,12 @@ CREATE TABLE IF NOT EXISTS addresses (
 );
 
 ALTER TABLE addresses ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view own addresses" ON addresses;
+DROP POLICY IF EXISTS "Users can insert own addresses" ON addresses;
+DROP POLICY IF EXISTS "Users can update own addresses" ON addresses;
+DROP POLICY IF EXISTS "Users can delete own addresses" ON addresses;
 
 CREATE POLICY "Users can view own addresses"
   ON addresses FOR SELECT
@@ -420,6 +458,12 @@ CREATE TABLE IF NOT EXISTS orders (
 );
 
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view own orders" ON orders;
+DROP POLICY IF EXISTS "Users can insert own orders" ON orders;
+DROP POLICY IF EXISTS "Admins can view all orders" ON orders;
+DROP POLICY IF EXISTS "Admins can update all orders" ON orders;
 
 CREATE POLICY "Users can view own orders"
   ON orders FOR SELECT
@@ -474,6 +518,10 @@ CREATE TABLE IF NOT EXISTS order_items (
 
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view own order items" ON order_items;
+DROP POLICY IF EXISTS "Admins can view all order items" ON order_items;
+
 CREATE POLICY "Users can view own order items"
   ON order_items FOR SELECT
   TO authenticated
@@ -517,6 +565,12 @@ BEGIN
   RETURN NEW;
 END;
 $$ language 'plpgsql';
+
+-- Drop existing triggers if they exist
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
+DROP TRIGGER IF EXISTS update_products_updated_at ON products;
+DROP TRIGGER IF EXISTS update_carts_updated_at ON carts;
+DROP TRIGGER IF EXISTS update_orders_updated_at ON orders;
 
 -- Create triggers for updated_at
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
