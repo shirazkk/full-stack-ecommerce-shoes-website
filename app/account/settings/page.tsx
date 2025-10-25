@@ -1,20 +1,30 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { motion } from 'framer-motion';
-import { ArrowLeft, User, Mail, Phone, Lock, MapPin, Save, Upload, Camera } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { getUser, signOut } from '@/lib/auth/client';
-import { createClient } from '@/lib/supabase/client';
+import { useState, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
+import {
+  ArrowLeft,
+  User,
+  Mail,
+  Phone,
+  Lock,
+  MapPin,
+  Save,
+  Upload,
+  Camera,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getUser, signOut } from "@/lib/auth/client";
+import { createClient } from "@/lib/supabase/client";
 
 export default function AccountSettingsPage() {
   const [user, setUser] = useState<any>(null);
@@ -24,58 +34,61 @@ export default function AccountSettingsPage() {
   const router = useRouter();
 
   // Form states
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
-  useEffect(() => {
-    loadUser();
-  }, []);
-
-  const loadUser = async () => {
+  const loadUser = useCallback(async () => {
     try {
       const userData = await getUser();
       if (userData) {
         setUser(userData);
-        setFullName(userData.full_name || '');
-        setEmail(userData.email || '');
-        setPhone(userData.phone || '');
-        setAvatarUrl(userData.avatar_url || '');
+        setFullName(userData.full_name || "");
+        setEmail(userData.email || "");
+        setPhone(userData.phone || "");
+        setAvatarUrl(userData.avatar_url || "");
       } else {
-        router.push('/login?redirectTo=/account/settings');
+        router.push("/login?redirectTo=/account/settings");
       }
     } catch (error) {
-      console.error('Error loading user:', error);
-      router.push('/login?redirectTo=/account/settings');
+      console.error("Error loading user:", error);
+      router.push("/login?redirectTo=/account/settings");
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
+
+  const handleAvatarUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     // Validate file type and size
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       toast({
-        title: 'Invalid File',
-        description: 'Please select an image file.',
-        variant: 'destructive',
+        title: "Invalid File",
+        description: "Please select an image file.",
+        variant: "destructive",
       });
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+    if (file.size > 5 * 1024 * 1024) {
+      // 5MB limit
       toast({
-        title: 'File Too Large',
-        description: 'Please select an image smaller than 5MB.',
-        variant: 'destructive',
+        title: "File Too Large",
+        description: "Please select an image smaller than 5MB.",
+        variant: "destructive",
       });
       return;
     }
@@ -85,14 +98,14 @@ export default function AccountSettingsPage() {
       const supabase = createClient();
 
       // Upload to Supabase Storage
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split(".").pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
+        .from("avatars")
         .upload(filePath, file, {
-          cacheControl: '3600',
+          cacheControl: "3600",
           upsert: false,
         });
 
@@ -101,15 +114,15 @@ export default function AccountSettingsPage() {
       }
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
       // Update profile with new avatar URL
       const { error: updateError } = await supabase
-        .from('profiles')
+        .from("profiles")
         .update({ avatar_url: publicUrl })
-        .eq('id', user.id);
+        .eq("id", user.id);
 
       if (updateError) {
         throw updateError;
@@ -119,18 +132,18 @@ export default function AccountSettingsPage() {
       setUser({ ...user, avatar_url: publicUrl });
 
       // Dispatch custom event to update header
-      window.dispatchEvent(new CustomEvent('userUpdated'));
+      window.dispatchEvent(new CustomEvent("userUpdated"));
 
       toast({
-        title: 'Avatar Updated',
-        description: 'Your profile picture has been updated successfully.',
+        title: "Avatar Updated",
+        description: "Your profile picture has been updated successfully.",
       });
     } catch (error) {
-      console.error('Error uploading avatar:', error);
+      console.error("Error uploading avatar:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to upload avatar. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to upload avatar. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setUploadingAvatar(false);
@@ -141,30 +154,30 @@ export default function AccountSettingsPage() {
     try {
       setSaving(true);
       const supabase = createClient();
-      
+
       const { error } = await supabase
-        .from('profiles')
+        .from("profiles")
         .update({
           full_name: fullName,
           phone: phone,
           avatar_url: avatarUrl,
         })
-        .eq('id', user.id);
+        .eq("id", user.id);
 
       if (error) {
         throw error;
       }
 
       toast({
-        title: 'Profile Updated',
-        description: 'Your profile has been updated successfully.',
+        title: "Profile Updated",
+        description: "Your profile has been updated successfully.",
       });
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error("Error updating profile:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to update profile. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setSaving(false);
@@ -174,9 +187,9 @@ export default function AccountSettingsPage() {
   const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
       toast({
-        title: 'Error',
-        description: 'Passwords do not match.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Passwords do not match.",
+        variant: "destructive",
       });
       return;
     }
@@ -184,9 +197,9 @@ export default function AccountSettingsPage() {
     try {
       setSaving(true);
       const supabase = createClient();
-      
+
       const { error } = await supabase.auth.updateUser({
-        password: newPassword
+        password: newPassword,
       });
 
       if (error) {
@@ -194,20 +207,20 @@ export default function AccountSettingsPage() {
       }
 
       toast({
-        title: 'Password Updated',
-        description: 'Your password has been updated successfully.',
+        title: "Password Updated",
+        description: "Your password has been updated successfully.",
       });
 
       // Clear password fields
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
     } catch (error) {
-      console.error('Error updating password:', error);
+      console.error("Error updating password:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to update password. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to update password. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setSaving(false);
@@ -247,8 +260,12 @@ export default function AccountSettingsPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
-            <p className="text-gray-600">Manage your account information and preferences</p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Account Settings
+            </h1>
+            <p className="text-gray-600">
+              Manage your account information and preferences
+            </p>
           </div>
         </div>
 
@@ -268,9 +285,14 @@ export default function AccountSettingsPage() {
                 <div className="flex items-center space-x-6">
                   <div className="relative">
                     <Avatar className="w-20 h-20">
-                      <AvatarImage src={avatarUrl} alt={user?.full_name || user?.email} />
+                      <AvatarImage
+                        src={avatarUrl}
+                        alt={user?.full_name || user?.email}
+                      />
                       <AvatarFallback className="bg-nike-orange-500 text-white text-xl font-semibold">
-                        {user?.full_name ? user.full_name.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase()}
+                        {user?.full_name
+                          ? user.full_name.charAt(0).toUpperCase()
+                          : user?.email?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     {uploadingAvatar && (
@@ -284,7 +306,9 @@ export default function AccountSettingsPage() {
                       <div className="flex items-center space-x-2 text-nike-orange-500 hover:text-nike-orange-600 transition-colors">
                         <Camera className="h-4 w-4" />
                         <span className="text-sm font-medium">
-                          {avatarUrl ? 'Change Profile Picture' : 'Upload Profile Picture'}
+                          {avatarUrl
+                            ? "Change Profile Picture"
+                            : "Upload Profile Picture"}
                         </span>
                       </div>
                     </Label>
@@ -301,9 +325,9 @@ export default function AccountSettingsPage() {
                     </p>
                   </div>
                 </div>
-                
+
                 <Separator />
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="fullName">Full Name</Label>
@@ -333,10 +357,15 @@ export default function AccountSettingsPage() {
                     className="bg-gray-50"
                   />
                   <p className="text-sm text-gray-500">
-                    Email cannot be changed. Contact support if you need to update your email.
+                    Email cannot be changed. Contact support if you need to
+                    update your email.
                   </p>
                 </div>
-                <Button onClick={handleSaveProfile} disabled={saving} className="w-full">
+                <Button
+                  onClick={handleSaveProfile}
+                  disabled={saving}
+                  className="w-full"
+                >
                   {saving ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
@@ -383,7 +412,9 @@ export default function AccountSettingsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                    <Label htmlFor="confirmPassword">
+                      Confirm New Password
+                    </Label>
                     <Input
                       id="confirmPassword"
                       type="password"
@@ -393,7 +424,12 @@ export default function AccountSettingsPage() {
                     />
                   </div>
                 </div>
-                <Button onClick={handleChangePassword} disabled={saving} variant="outline" className="w-full">
+                <Button
+                  onClick={handleChangePassword}
+                  disabled={saving}
+                  variant="outline"
+                  className="w-full"
+                >
                   {saving ? (
                     <>
                       <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin mr-2" />
@@ -420,16 +456,23 @@ export default function AccountSettingsPage() {
               <CardContent className="space-y-4">
                 <div className="flex items-center space-x-4">
                   <Avatar className="w-16 h-16">
-                    <AvatarImage src={user.avatar_url} alt={user.full_name || user.email} />
+                    <AvatarImage
+                      src={user.avatar_url}
+                      alt={user.full_name || user.email}
+                    />
                     <AvatarFallback className="bg-nike-orange-500 text-white text-lg font-semibold">
-                      {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                      {user.full_name
+                        ? user.full_name.charAt(0).toUpperCase()
+                        : user.email.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-semibold">{user.full_name || 'No name set'}</h3>
+                    <h3 className="font-semibold">
+                      {user.full_name || "No name set"}
+                    </h3>
                     <p className="text-sm text-gray-600">{user.email}</p>
                     <Badge variant="outline" className="mt-1">
-                      {user.role === 'admin' ? 'Administrator' : 'Customer'}
+                      {user.role === "admin" ? "Administrator" : "Customer"}
                     </Badge>
                   </div>
                 </div>
@@ -451,25 +494,33 @@ export default function AccountSettingsPage() {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start" asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  asChild
+                >
                   <Link href="/account/orders">
                     <MapPin className="mr-2 h-4 w-4" />
                     Order History
                   </Link>
                 </Button>
-                <Button variant="outline" className="w-full justify-start" asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  asChild
+                >
                   <Link href="/wishlist">
                     <User className="mr-2 h-4 w-4" />
                     My Wishlist
                   </Link>
                 </Button>
                 <Separator />
-                <Button 
-                  variant="destructive" 
+                <Button
+                  variant="destructive"
                   className="w-full justify-start"
                   onClick={async () => {
                     await signOut();
-                    router.push('/');
+                    router.push("/");
                   }}
                 >
                   <Lock className="mr-2 h-4 w-4" />

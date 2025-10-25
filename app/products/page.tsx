@@ -39,7 +39,7 @@ const sortOptions = [
 ];
 
 export default function ProductsPage() {
-  const searchParams = useSearchParams();
+  // const searchParams = useSearchParams();
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);

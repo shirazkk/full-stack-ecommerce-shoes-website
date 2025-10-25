@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,11 +18,7 @@ export default function AccountPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  useEffect(() => {
-    loadUser();
-  }, []);
-
-  const loadUser = async () => {
+  const loadUser = useCallback(async () => {
     try {
       const userData = await getUser();
       if (userData) {
@@ -36,7 +32,7 @@ export default function AccountPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
   const handleSignOut = async () => {
     try {
@@ -62,6 +58,10 @@ export default function AccountPage() {
       });
     }
   };
+
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
 
   if (loading) {
     return (
@@ -149,7 +149,7 @@ export default function AccountPage() {
               </div>
               <h3 className="text-lg font-semibold mb-2">Wishlist</h3>
               <p className="text-gray-600 text-sm mb-4">
-                Items you've saved for later
+                Items you&apos;ve saved for later
               </p>
               <Button asChild variant="outline" className="w-full">
                 <Link href="/wishlist">

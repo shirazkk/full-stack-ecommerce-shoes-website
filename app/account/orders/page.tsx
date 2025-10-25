@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Package, Truck, CheckCircle, XCircle, Clock, Eye } from 'lucide-react';
-import { Order, OrderItem } from '@/types';
+import { Order } from '@/types';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const mockOrders: Order[] = [
   {
@@ -199,7 +200,7 @@ export default function OrdersPage() {
               <Package className="h-16 w-16 text-nike-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-nike-gray-900 mb-2">No orders yet</h3>
               <p className="text-nike-gray-600 mb-6">
-                You haven't placed any orders yet. Start shopping to see your orders here.
+                You haven&apos;t placed any orders yet. Start shopping to see your orders here.
               </p>
               <Button asChild className="btn-nike-primary">
                 <Link href="/products">Start Shopping</Link>
@@ -250,9 +251,11 @@ export default function OrdersPage() {
                             <div key={item.id} className="flex items-center space-x-4">
                               <div className="w-16 h-16 relative rounded-lg overflow-hidden bg-nike-gray-100">
                                 {item.product?.images?.[0] && (
-                                  <img
+                                  <Image
                                     src={item.product.images[0]}
                                     alt={item.product.name}
+                                    width={64}
+                                    height={64}
                                     className="w-full h-full object-cover"
                                   />
                                 )}

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Image from 'next/image';
 import { 
   TrendingUp, 
   TrendingDown,
@@ -166,7 +167,7 @@ export default function AdminAnalyticsPage() {
         <div>
           <h1 className="text-3xl font-bold text-nike-gray-900">Analytics Dashboard</h1>
           <p className="text-nike-gray-600 mt-2">
-            Track your store's performance and key metrics
+            Track your store&apos;s performance and key metrics
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -364,9 +365,11 @@ export default function AdminAnalyticsPage() {
                   className="flex items-center space-x-4 p-4 border rounded-lg hover:bg-nike-gray-50 transition-colors"
                 >
                   <div className="w-12 h-12 relative rounded-lg overflow-hidden bg-nike-gray-100">
-                    <img
+                    <Image
                       src={product.image}
                       alt={product.name}
+                      width={48}
+                      height={48}
                       className="w-full h-full object-cover"
                     />
                   </div>

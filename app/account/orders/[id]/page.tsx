@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Clock, MapPin, Phone, Mail } from 'lucide-react';
 import { Order } from '@/types';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const statusConfig = {
   pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
@@ -218,9 +219,11 @@ export default function OrderDetailPage() {
                         <div className="flex items-center space-x-4 p-4 border rounded-lg">
                           <div className="w-20 h-20 relative rounded-lg overflow-hidden bg-nike-gray-100">
                             {item.product?.images?.[0] && (
-                              <img
+                              <Image
                                 src={item.product.images[0]}
                                 alt={item.product.name}
+                                width={64}
+                                height={64}
                                 className="w-full h-full object-cover"
                               />
                             )}

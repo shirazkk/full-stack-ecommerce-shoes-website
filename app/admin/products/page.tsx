@@ -291,8 +291,8 @@ export default function AdminProductsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="Men's Shoes">Men's Shoes</SelectItem>
-                    <SelectItem value="Women's Shoes">Women's Shoes</SelectItem>
+                    <SelectItem value="Men's Shoes">Men&apos;s Shoes</SelectItem>
+                    <SelectItem value="Women's Shoes">Women&apos;s Shoes</SelectItem>
                     <SelectItem value="Running Shoes">Running Shoes</SelectItem>
                     <SelectItem value="Casual Sneakers">Casual Sneakers</SelectItem>
                   </SelectContent>
