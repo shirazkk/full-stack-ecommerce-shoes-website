@@ -1,6 +1,13 @@
 // Analytics tracking utility
 // Supports Google Analytics 4 and custom event tracking
 
+// Extend Window interface to include gtag
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
+}
+
 interface AnalyticsEvent {
   name: string;
   parameters?: Record<string, any>;
