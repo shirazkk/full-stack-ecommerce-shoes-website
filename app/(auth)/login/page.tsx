@@ -1,23 +1,31 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { signIn, signInWithOAuth } from '@/lib/auth/client';
-import { Loader2, Zap } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { signIn, signInWithOAuth } from "@/lib/auth/client";
+import { Loader2, Zap } from "lucide-react";
+import { motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Invalid email address.' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+  email: z.string().email({ message: "Invalid email address." }),
+  password: z
+    .string()
+    .min(6, { message: "Password must be at least 6 characters." }),
 });
 
 export default function LoginPage() {
@@ -30,8 +38,8 @@ export default function LoginPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
   });
 
@@ -44,16 +52,16 @@ export default function LoginPage() {
 
     if (error) {
       toast({
-        title: 'Login Failed',
+        title: "Login Failed",
         description: error,
-        variant: 'destructive',
+        variant: "destructive",
       });
     } else if (user) {
       toast({
-        title: 'Login Successful',
-        description: 'Welcome back!',
+        title: "Login Successful",
+        description: "Welcome back!",
       });
-      const redirectTo = searchParams.get('redirectTo') || '/';
+      const redirectTo = searchParams.get("redirectTo") || "/";
       router.push(redirectTo);
     }
     setIsLoading(false);
@@ -61,12 +69,12 @@ export default function LoginPage() {
 
   async function handleGoogleSignIn() {
     setIsOAuthLoading(true);
-    const { error } = await signInWithOAuth('google');
+    const { error } = await signInWithOAuth("google");
     if (error) {
       toast({
-        title: 'Google Login Failed',
+        title: "Google Login Failed",
         description: error,
-        variant: 'destructive',
+        variant: "destructive",
       });
     }
     setIsOAuthLoading(false);
@@ -99,64 +107,86 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <Label htmlFor="email" className="text-white">Email</Label>
+              <Label htmlFor="email" className="text-white">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="m@example.com"
                 className="bg-white/10 border-white/20 text-white placeholder:text-nike-gray-400"
-                {...form.register('email')}
+                {...form.register("email")}
               />
               {form.formState.errors.email && (
-                <p className="text-sm text-red-400">{form.formState.errors.email.message}</p>
+                <p className="text-sm text-red-400">
+                  {form.formState.errors.email.message}
+                </p>
               )}
             </div>
             <div>
-              <Label htmlFor="password" className="text-white">Password</Label>
+              <Label htmlFor="password" className="text-white">
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
                 className="bg-white/10 border-white/20 text-white placeholder:text-nike-gray-400"
-                {...form.register('password')}
+                {...form.register("password")}
               />
               {form.formState.errors.password && (
-                <p className="text-sm text-red-400">{form.formState.errors.password.message}</p>
+                <p className="text-sm text-red-400">
+                  {form.formState.errors.password.message}
+                </p>
               )}
             </div>
-            <Button type="submit" className="w-full bg-nike-orange-500 hover:bg-nike-orange-600" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full bg-nike-orange-500 hover:bg-nike-orange-600"
+              disabled={isLoading}
+            >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
             </Button>
           </form>
-          
+
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-white/20" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-nike-black px-2 text-nike-gray-400">Or continue with</span>
+              <span className="bg-nike-black px-2 text-nike-gray-400">
+                Or continue with
+              </span>
             </div>
           </div>
-          
-          <Button 
-            variant="outline" 
-            className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20" 
-            onClick={handleGoogleSignIn} 
+
+          <Button
+            variant="outline"
+            className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20"
+            onClick={handleGoogleSignIn}
             disabled={isOAuthLoading}
           >
-            {isOAuthLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isOAuthLoading && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
             Continue with Google
           </Button>
-          
+
           <div className="mt-6 text-center space-y-2">
             <p className="text-sm text-nike-gray-300">
-              Don&apos;t have an account?{' '}
-              <Link href="/signup" className="text-nike-orange-400 hover:text-nike-orange-300 underline">
+              Don&apos;t have an account?{" "}
+              <Link
+                href="/signup"
+                className="text-nike-orange-400 hover:text-nike-orange-300 underline"
+              >
                 Sign up
               </Link>
             </p>
             <p className="text-sm text-nike-gray-300">
-              <Link href="/auth/reset-password" className="text-nike-orange-400 hover:text-nike-orange-300 underline">
+              <Link
+                href="/reset-password"
+                className="text-nike-orange-400 hover:text-nike-orange-300 underline"
+              >
                 Forgot password?
               </Link>
             </p>

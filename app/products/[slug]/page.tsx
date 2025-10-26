@@ -11,19 +11,20 @@ import { Separator } from '@/components/ui/separator';
 import { Heart, ShoppingCart, Star, Truck, Shield, RefreshCw, ArrowLeft, Plus, Minus } from 'lucide-react';
 import { Product } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { addToGuestCart } from '@/lib/services/cart.service';
-import { isInGuestWishlist, addToGuestWishlist, removeFromGuestWishlist } from '@/lib/services/wishlist.service';
+import { useCart } from '@/hooks/use-cart';
+import { useWishlist } from '@/hooks/use-wishlist';
 
 export default function ProductDetailPage() {
   const params = useParams();
   const { toast } = useToast();
+  const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   // Fetch product data from API
@@ -48,7 +49,6 @@ export default function ProductDetailPage() {
           setProduct(productData);
           setSelectedColor(productData.colors?.[0] || 'Black');
           setSelectedSize(productData.sizes?.[0] || 'M');
-          setIsWishlisted(isInGuestWishlist(productData.id));
         } else {
           setProduct(null);
         }
@@ -82,34 +82,24 @@ export default function ProductDetailPage() {
 
     setIsAddingToCart(true);
     
-    // Add to guest cart (localStorage)
-    addToGuestCart(product, selectedSize, selectedColor, quantity);
-    
-    toast({
-      title: 'Added to Cart',
-      description: `${product.name} has been added to your cart.`,
-    });
-    
-    setIsAddingToCart(false);
+    try {
+      await addToCart(product, quantity, selectedSize, selectedColor);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
-  const handleWishlistToggle = () => {
+  const handleWishlistToggle = async () => {
     if (!product) return;
 
+    const isWishlisted = isInWishlist(product.id);
+    
     if (isWishlisted) {
-      removeFromGuestWishlist(product.id);
-      setIsWishlisted(false);
-      toast({
-        title: 'Removed from Wishlist',
-        description: `${product.name} has been removed from your wishlist.`,
-      });
+      await removeFromWishlist(product.id);
     } else {
-      addToGuestWishlist(product.id);
-      setIsWishlisted(true);
-      toast({
-        title: 'Added to Wishlist',
-        description: `${product.name} has been added to your wishlist.`,
-      });
+      await addToWishlist(product);
     }
   };
 
@@ -219,12 +209,12 @@ export default function ProductDetailPage() {
                   size="icon"
                   onClick={handleWishlistToggle}
                   className={`transition-colors ${
-                    isWishlisted
+                    isInWishlist(product.id)
                       ? 'text-red-500 hover:text-red-600'
                       : 'text-nike-gray-400 hover:text-red-500'
                   }`}
                 >
-                  <Heart className={`h-6 w-6 ${isWishlisted ? 'fill-current' : ''}`} />
+                  <Heart className={`h-6 w-6 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
                 </Button>
               </div>
 

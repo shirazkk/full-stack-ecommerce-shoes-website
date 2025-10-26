@@ -5,7 +5,7 @@ export async function getWishlist(userId: string): Promise<Wishlist[]> {
   const supabase = await createClient();
   
   const { data, error } = await supabase
-    .from('wishlist')
+    .from('wishlists')
     .select(`
       *,
       product:products (*)
@@ -26,7 +26,7 @@ export async function addToWishlist(userId: string, productId: string): Promise<
 
   // Check if already in wishlist
   const { data: existing } = await supabase
-    .from('wishlist')
+    .from('wishlists')
     .select('*')
     .eq('user_id', userId)
     .eq('product_id', productId)
@@ -37,7 +37,7 @@ export async function addToWishlist(userId: string, productId: string): Promise<
   }
 
   const { data, error } = await supabase
-    .from('wishlist')
+    .from('wishlists')
     .insert({
       user_id: userId,
       product_id: productId,
@@ -60,7 +60,7 @@ export async function removeFromWishlist(wishlistId: string): Promise<boolean> {
   const supabase = await createClient();
 
   const { error } = await supabase
-    .from('wishlist')
+    .from('wishlists')
     .delete()
     .eq('id', wishlistId);
 
@@ -76,52 +76,11 @@ export async function isInWishlist(userId: string, productId: string): Promise<b
   const supabase = await createClient();
 
   const { data } = await supabase
-    .from('wishlist')
+    .from('wishlists')
     .select('id')
     .eq('user_id', userId)
     .eq('product_id', productId)
     .single();
 
   return !!data;
-}
-
-// Client-side wishlist functions for localStorage (for guest users)
-export function getGuestWishlist(): string[] {
-  if (typeof window === 'undefined') return [];
-  
-  try {
-    const wishlist = localStorage.getItem('guest_wishlist');
-    return wishlist ? JSON.parse(wishlist) : [];
-  } catch {
-    return [];
-  }
-}
-
-export function saveGuestWishlist(productIds: string[]): void {
-  if (typeof window === 'undefined') return;
-  
-  try {
-    localStorage.setItem('guest_wishlist', JSON.stringify(productIds));
-  } catch (error) {
-    console.error('Error saving guest wishlist:', error);
-  }
-}
-
-export function addToGuestWishlist(productId: string): string[] {
-  const wishlist = getGuestWishlist();
-  if (!wishlist.includes(productId)) {
-    wishlist.push(productId);
-    saveGuestWishlist(wishlist);
-  }
-  return wishlist;
-}
-
-export function removeFromGuestWishlist(productId: string): string[] {
-  const wishlist = getGuestWishlist().filter(id => id !== productId);
-  saveGuestWishlist(wishlist);
-  return wishlist;
-}
-
-export function isInGuestWishlist(productId: string): boolean {
-  return getGuestWishlist().includes(productId);
 }

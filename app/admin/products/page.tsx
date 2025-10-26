@@ -35,82 +35,6 @@ interface Product {
   sales: number;
 }
 
-const mockProducts: Product[] = [
-  {
-    id: '1',
-    name: 'Nike Air Max 270',
-    brand: 'Nike',
-    price: 150.00,
-    salePrice: 120.00,
-    stock: 25,
-    status: 'active',
-    category: "Men's Shoes",
-    image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=100&h=100&fit=crop',
-    createdAt: '2024-01-15T10:30:00Z',
-    sales: 45,
-  },
-  {
-    id: '2',
-    name: 'Adidas Ultraboost 22',
-    brand: 'Adidas',
-    price: 190.00,
-    stock: 35,
-    status: 'active',
-    category: "Women's Shoes",
-    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&h=100&fit=crop',
-    createdAt: '2024-01-14T09:15:00Z',
-    sales: 38,
-  },
-  {
-    id: '3',
-    name: 'Puma RS-X Reinvention',
-    brand: 'Puma',
-    price: 110.00,
-    salePrice: 99.99,
-    stock: 28,
-    status: 'active',
-    category: 'Casual Sneakers',
-    image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=100&h=100&fit=crop',
-    createdAt: '2024-01-13T16:20:00Z',
-    sales: 22,
-  },
-  {
-    id: '4',
-    name: 'New Balance 990v5',
-    brand: 'New Balance',
-    price: 175.00,
-    stock: 42,
-    status: 'active',
-    category: 'Running Shoes',
-    image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=100&h=100&fit=crop',
-    createdAt: '2024-01-12T11:45:00Z',
-    sales: 31,
-  },
-  {
-    id: '5',
-    name: 'Converse Chuck 70',
-    brand: 'Converse',
-    price: 80.00,
-    stock: 60,
-    status: 'active',
-    category: 'Casual Sneakers',
-    image: 'https://images.unsplash.com/photo-1032118-pexels-photo-1032118?w=100&h=100&fit=crop',
-    createdAt: '2024-01-11T14:30:00Z',
-    sales: 67,
-  },
-  {
-    id: '6',
-    name: 'Vans Old Skool',
-    brand: 'Vans',
-    price: 70.00,
-    stock: 55,
-    status: 'inactive',
-    category: 'Casual Sneakers',
-    image: 'https://images.unsplash.com/photo-267392-pexels-photo-267392?w=100&h=100&fit=crop',
-    createdAt: '2024-01-10T08:15:00Z',
-    sales: 0,
-  },
-];
 
 const statusConfig = {
   active: { label: 'Active', color: 'bg-green-100 text-green-800' },
@@ -129,12 +53,27 @@ export default function AdminProductsPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setProducts(mockProducts);
-      setFilteredProducts(mockProducts);
-      setLoading(false);
-    }, 1000);
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/products');
+        if (!response.ok) {
+          throw new Error('Failed to fetch products');
+        }
+        const data = await response.json();
+        setProducts(data.products || []);
+        setFilteredProducts(data.products || []);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        // Fallback to empty array on error
+        setProducts([]);
+        setFilteredProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
   }, []);
 
   useEffect(() => {

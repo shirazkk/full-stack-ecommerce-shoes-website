@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
 
     const filters = {
       category: searchParams.get('category') || undefined,
-      brand: searchParams.get('brand') || undefined,
+      brands: searchParams.getAll('brands') || undefined,
       minPrice: searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')!) : undefined,
       maxPrice: searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')!) : undefined,
       colors: searchParams.get('colors')?.split(',').filter(Boolean),

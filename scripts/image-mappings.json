@@ -1,0 +1,326 @@
+{
+  "categories": {
+    "mens-shoes": [
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/mens-shoes/flying-colorful-womens-sneaker-isolated-on-white-background-fashionable-stylish-sports-shoe.jpg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/mens-shoes/pexels-photo-1027130.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/mens-shoes/pexels-photo-1032110.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/mens-shoes/pexels-photo-1102777.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/mens-shoes/pexels-photo-1159670.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/mens-shoes/pexels-photo-1240892.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/mens-shoes/pexels-photo-1280064.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/mens-shoes/pexels-photo-1335463.jpeg"
+    ],
+    "womens-shoes": [
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/womens-shoes/pexels-photo-134064.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/womens-shoes/pexels-photo-137603.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/womens-shoes/pexels-photo-1407354.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/womens-shoes/pexels-photo-1445696.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/womens-shoes/pexels-photo-1449844.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/womens-shoes/pexels-photo-1478442.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/womens-shoes/pexels-photo-1503009.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/womens-shoes/pexels-photo-15300927.jpeg"
+    ],
+    "kids-shoes": [
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/kids-shoes/pexels-photo-1598505.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/kids-shoes/pexels-photo-1598508.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/kids-shoes/pexels-photo-186035.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/kids-shoes/pexels-photo-2048548.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/kids-shoes/pexels-photo-2421374.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/kids-shoes/pexels-photo-2529147.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/kids-shoes/pexels-photo-2529148.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/kids-shoes/pexels-photo-267301.jpeg"
+    ],
+    "running-shoes": [
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/running-shoes/pexels-photo-267320.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/running-shoes/pexels-photo-292998.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/running-shoes/pexels-photo-292999.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/running-shoes/pexels-photo-637076.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/running-shoes/pexels-photo-786003.jpeg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/running-shoes/pexels-photo.jpg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/running-shoes/photo-1491553895911-0055eca6402d.jpg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/running-shoes/photo-1512374382149-233c42b6a83b.jpg"
+    ],
+    "basketball-shoes": [
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/basketball-shoes/photo-1525966222134-fcfa99b8ae77.jpg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/basketball-shoes/photo-1529810313688-44ea1c2d81d3.jpg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/basketball-shoes/photo-1539185441755-769473a23570.jpg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/basketball-shoes/photo-1543163521-1bf539c55dd2.jpg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/basketball-shoes/photo-1543508282-6319a3e2621f.jpg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/basketball-shoes/photo-1549298916-b41d501d3772.jpg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/basketball-shoes/photo-1551107696-a4b0c5a0d9a2.jpg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/basketball-shoes/photo-1560769629-975ec94e6a86.jpg"
+    ],
+    "casual-sneakers": [
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/casual-sneakers/photo-1595341888016-a392ef81b7de.jpg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/casual-sneakers/photo-1595950653106-6c9ebd614d3a.jpg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/casual-sneakers/photo-1600185365926-3a2ce3cdb9eb.jpg",
+      "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/casual-sneakers/photo-1606107557195-0e29a4b5b4aa.jpg"
+    ]
+  },
+  "allImages": [
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\flying-colorful-womens-sneaker-isolated-on-white-background-fashionable-stylish-sports-shoe.jpg",
+      "storagePath": "products/mens-shoes/flying-colorful-womens-sneaker-isolated-on-white-background-fashionable-stylish-sports-shoe.jpg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/mens-shoes/flying-colorful-womens-sneaker-isolated-on-white-background-fashionable-stylish-sports-shoe.jpg",
+      "category": "mens-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-1027130.jpeg",
+      "storagePath": "products/mens-shoes/pexels-photo-1027130.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/mens-shoes/pexels-photo-1027130.jpeg",
+      "category": "mens-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-1032110.jpeg",
+      "storagePath": "products/mens-shoes/pexels-photo-1032110.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/mens-shoes/pexels-photo-1032110.jpeg",
+      "category": "mens-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-1102777.jpeg",
+      "storagePath": "products/mens-shoes/pexels-photo-1102777.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/mens-shoes/pexels-photo-1102777.jpeg",
+      "category": "mens-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-1159670.jpeg",
+      "storagePath": "products/mens-shoes/pexels-photo-1159670.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/mens-shoes/pexels-photo-1159670.jpeg",
+      "category": "mens-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-1240892.jpeg",
+      "storagePath": "products/mens-shoes/pexels-photo-1240892.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/mens-shoes/pexels-photo-1240892.jpeg",
+      "category": "mens-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-1280064.jpeg",
+      "storagePath": "products/mens-shoes/pexels-photo-1280064.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/mens-shoes/pexels-photo-1280064.jpeg",
+      "category": "mens-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-1335463.jpeg",
+      "storagePath": "products/mens-shoes/pexels-photo-1335463.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/mens-shoes/pexels-photo-1335463.jpeg",
+      "category": "mens-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-134064.jpeg",
+      "storagePath": "products/womens-shoes/pexels-photo-134064.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/womens-shoes/pexels-photo-134064.jpeg",
+      "category": "womens-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-137603.jpeg",
+      "storagePath": "products/womens-shoes/pexels-photo-137603.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/womens-shoes/pexels-photo-137603.jpeg",
+      "category": "womens-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-1407354.jpeg",
+      "storagePath": "products/womens-shoes/pexels-photo-1407354.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/womens-shoes/pexels-photo-1407354.jpeg",
+      "category": "womens-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-1445696.jpeg",
+      "storagePath": "products/womens-shoes/pexels-photo-1445696.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/womens-shoes/pexels-photo-1445696.jpeg",
+      "category": "womens-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-1449844.jpeg",
+      "storagePath": "products/womens-shoes/pexels-photo-1449844.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/womens-shoes/pexels-photo-1449844.jpeg",
+      "category": "womens-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-1478442.jpeg",
+      "storagePath": "products/womens-shoes/pexels-photo-1478442.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/womens-shoes/pexels-photo-1478442.jpeg",
+      "category": "womens-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-1503009.jpeg",
+      "storagePath": "products/womens-shoes/pexels-photo-1503009.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/womens-shoes/pexels-photo-1503009.jpeg",
+      "category": "womens-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-15300927.jpeg",
+      "storagePath": "products/womens-shoes/pexels-photo-15300927.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/womens-shoes/pexels-photo-15300927.jpeg",
+      "category": "womens-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-1598505.jpeg",
+      "storagePath": "products/kids-shoes/pexels-photo-1598505.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/kids-shoes/pexels-photo-1598505.jpeg",
+      "category": "kids-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-1598508.jpeg",
+      "storagePath": "products/kids-shoes/pexels-photo-1598508.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/kids-shoes/pexels-photo-1598508.jpeg",
+      "category": "kids-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-186035.jpeg",
+      "storagePath": "products/kids-shoes/pexels-photo-186035.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/kids-shoes/pexels-photo-186035.jpeg",
+      "category": "kids-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-2048548.jpeg",
+      "storagePath": "products/kids-shoes/pexels-photo-2048548.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/kids-shoes/pexels-photo-2048548.jpeg",
+      "category": "kids-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-2421374.jpeg",
+      "storagePath": "products/kids-shoes/pexels-photo-2421374.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/kids-shoes/pexels-photo-2421374.jpeg",
+      "category": "kids-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-2529147.jpeg",
+      "storagePath": "products/kids-shoes/pexels-photo-2529147.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/kids-shoes/pexels-photo-2529147.jpeg",
+      "category": "kids-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-2529148.jpeg",
+      "storagePath": "products/kids-shoes/pexels-photo-2529148.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/kids-shoes/pexels-photo-2529148.jpeg",
+      "category": "kids-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-267301.jpeg",
+      "storagePath": "products/kids-shoes/pexels-photo-267301.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/kids-shoes/pexels-photo-267301.jpeg",
+      "category": "kids-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-267320.jpeg",
+      "storagePath": "products/running-shoes/pexels-photo-267320.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/running-shoes/pexels-photo-267320.jpeg",
+      "category": "running-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-292998.jpeg",
+      "storagePath": "products/running-shoes/pexels-photo-292998.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/running-shoes/pexels-photo-292998.jpeg",
+      "category": "running-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-292999.jpeg",
+      "storagePath": "products/running-shoes/pexels-photo-292999.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/running-shoes/pexels-photo-292999.jpeg",
+      "category": "running-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-637076.jpeg",
+      "storagePath": "products/running-shoes/pexels-photo-637076.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/running-shoes/pexels-photo-637076.jpeg",
+      "category": "running-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo-786003.jpeg",
+      "storagePath": "products/running-shoes/pexels-photo-786003.jpeg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/running-shoes/pexels-photo-786003.jpeg",
+      "category": "running-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\pexels-photo.jpg",
+      "storagePath": "products/running-shoes/pexels-photo.jpg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/running-shoes/pexels-photo.jpg",
+      "category": "running-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\photo-1491553895911-0055eca6402d.jpg",
+      "storagePath": "products/running-shoes/photo-1491553895911-0055eca6402d.jpg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/running-shoes/photo-1491553895911-0055eca6402d.jpg",
+      "category": "running-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\photo-1512374382149-233c42b6a83b.jpg",
+      "storagePath": "products/running-shoes/photo-1512374382149-233c42b6a83b.jpg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/running-shoes/photo-1512374382149-233c42b6a83b.jpg",
+      "category": "running-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\photo-1525966222134-fcfa99b8ae77.jpg",
+      "storagePath": "products/basketball-shoes/photo-1525966222134-fcfa99b8ae77.jpg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/basketball-shoes/photo-1525966222134-fcfa99b8ae77.jpg",
+      "category": "basketball-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\photo-1529810313688-44ea1c2d81d3.jpg",
+      "storagePath": "products/basketball-shoes/photo-1529810313688-44ea1c2d81d3.jpg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/basketball-shoes/photo-1529810313688-44ea1c2d81d3.jpg",
+      "category": "basketball-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\photo-1539185441755-769473a23570.jpg",
+      "storagePath": "products/basketball-shoes/photo-1539185441755-769473a23570.jpg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/basketball-shoes/photo-1539185441755-769473a23570.jpg",
+      "category": "basketball-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\photo-1543163521-1bf539c55dd2.jpg",
+      "storagePath": "products/basketball-shoes/photo-1543163521-1bf539c55dd2.jpg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/basketball-shoes/photo-1543163521-1bf539c55dd2.jpg",
+      "category": "basketball-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\photo-1543508282-6319a3e2621f.jpg",
+      "storagePath": "products/basketball-shoes/photo-1543508282-6319a3e2621f.jpg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/basketball-shoes/photo-1543508282-6319a3e2621f.jpg",
+      "category": "basketball-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\photo-1549298916-b41d501d3772.jpg",
+      "storagePath": "products/basketball-shoes/photo-1549298916-b41d501d3772.jpg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/basketball-shoes/photo-1549298916-b41d501d3772.jpg",
+      "category": "basketball-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\photo-1551107696-a4b0c5a0d9a2.jpg",
+      "storagePath": "products/basketball-shoes/photo-1551107696-a4b0c5a0d9a2.jpg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/basketball-shoes/photo-1551107696-a4b0c5a0d9a2.jpg",
+      "category": "basketball-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\photo-1560769629-975ec94e6a86.jpg",
+      "storagePath": "products/basketball-shoes/photo-1560769629-975ec94e6a86.jpg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/basketball-shoes/photo-1560769629-975ec94e6a86.jpg",
+      "category": "basketball-shoes"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\photo-1595341888016-a392ef81b7de.jpg",
+      "storagePath": "products/casual-sneakers/photo-1595341888016-a392ef81b7de.jpg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/casual-sneakers/photo-1595341888016-a392ef81b7de.jpg",
+      "category": "casual-sneakers"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\photo-1595950653106-6c9ebd614d3a.jpg",
+      "storagePath": "products/casual-sneakers/photo-1595950653106-6c9ebd614d3a.jpg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/casual-sneakers/photo-1595950653106-6c9ebd614d3a.jpg",
+      "category": "casual-sneakers"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\photo-1600185365926-3a2ce3cdb9eb.jpg",
+      "storagePath": "products/casual-sneakers/photo-1600185365926-3a2ce3cdb9eb.jpg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/casual-sneakers/photo-1600185365926-3a2ce3cdb9eb.jpg",
+      "category": "casual-sneakers"
+    },
+    {
+      "originalPath": "D:\\my_shoes_web\\shoes-website\\public\\shoes-images\\photo-1606107557195-0e29a4b5b4aa.jpg",
+      "storagePath": "products/casual-sneakers/photo-1606107557195-0e29a4b5b4aa.jpg",
+      "publicUrl": "https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/casual-sneakers/photo-1606107557195-0e29a4b5b4aa.jpg",
+      "category": "casual-sneakers"
+    }
+  ]
+}

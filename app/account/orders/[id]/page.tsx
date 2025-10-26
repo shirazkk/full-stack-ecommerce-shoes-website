@@ -20,91 +20,6 @@ const statusConfig = {
   cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800', icon: XCircle },
 };
 
-const mockOrder: Order = {
-  id: '1',
-  user_id: 'user-1',
-  order_number: 'ORD-2024-001',
-  status: 'delivered',
-  subtotal: 240.00,
-  tax: 19.20,
-  shipping: 0,
-  total: 259.20,
-  shipping_address: {
-    id: 'addr-1',
-    user_id: 'user-1',
-    full_name: 'John Doe',
-    address_line1: '123 Main Street',
-    address_line2: 'Apt 4B',
-    city: 'New York',
-    state: 'NY',
-    postal_code: '10001',
-    country: 'US',
-    phone: '(555) 123-4567',
-    is_default: true,
-    created_at: new Date().toISOString(),
-  },
-  created_at: '2024-01-15T10:30:00Z',
-  updated_at: '2024-01-18T14:20:00Z',
-  order_items: [
-    {
-      id: 'item-1',
-      order_id: '1',
-      product_id: 'prod-1',
-      quantity: 1,
-      size: '10',
-      color: 'Black',
-      price: 120.00,
-      created_at: '2024-01-15T10:30:00Z',
-      product: {
-        id: 'prod-1',
-        name: 'Nike Air Max 270',
-        slug: 'nike-air-max-270',
-        description: 'Experience ultimate comfort with the Nike Air Max 270.',
-        price: 150.00,
-        sale_price: 120.00,
-        brand: 'Nike',
-        colors: ['Black', 'White', 'Red'],
-        sizes: ['7', '8', '9', '10', '11', '12'],
-        images: ['https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop'],
-        stock: 25,
-        is_featured: true,
-        is_new: true,
-        rating: 4.8,
-        reviews_count: 124,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    },
-    {
-      id: 'item-2',
-      order_id: '1',
-      product_id: 'prod-2',
-      quantity: 1,
-      size: '9',
-      color: 'White',
-      price: 120.00,
-      created_at: '2024-01-15T10:30:00Z',
-      product: {
-        id: 'prod-2',
-        name: 'Nike Air Force 1',
-        slug: 'nike-air-force-1',
-        description: 'The basketball original that puts a fresh spin on what you know best.',
-        price: 90.00,
-        brand: 'Nike',
-        colors: ['White', 'Black'],
-        sizes: ['7', '8', '9', '10', '11', '12'],
-        images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop'],
-        stock: 40,
-        is_featured: true,
-        is_new: false,
-        rating: 4.9,
-        reviews_count: 200,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    },
-  ],
-};
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -112,11 +27,30 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setOrder(mockOrder);
-      setLoading(false);
-    }, 1000);
+    const fetchOrder = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/orders/${params.id}`);
+        if (!response.ok) {
+          if (response.status === 404) {
+            setOrder(null);
+            return;
+          }
+          throw new Error('Failed to fetch order');
+        }
+        const data = await response.json();
+        setOrder(data.order);
+      } catch (error) {
+        console.error('Error fetching order:', error);
+        setOrder(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (params.id) {
+      fetchOrder();
+    }
   }, [params.id]);
 
   if (loading) {

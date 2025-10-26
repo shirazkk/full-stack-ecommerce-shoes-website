@@ -30,15 +30,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       const response = await fetch('/api/cart');
-      
+
       if (response.ok) {
         const data = await response.json();
         setCart(data.cart);
         setCartItems(data.cart?.items || []);
       } else if (response.status === 401) {
-        // User not authenticated, use guest cart from localStorage
-        const guestCart = JSON.parse(localStorage.getItem('guest_cart') || '[]');
-        setCartItems(guestCart);
+        // User not authenticated, clear cart
+        setCartItems([]);
         setCart(null);
       }
     } catch (error) {
@@ -51,7 +50,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addToCart = async (product: Product, quantity: number = 1, size: string = 'M', color: string = 'Black') => {
     try {
       setLoading(true);
-      
+
       const response = await fetch('/api/cart', {
         method: 'POST',
         headers: {
@@ -75,36 +74,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
           description: `${product.name} has been added to your cart.`,
         });
       } else if (response.status === 401) {
-        // User not authenticated, use guest cart
-        const guestCart = JSON.parse(localStorage.getItem('guest_cart') || '[]');
-        const existingItemIndex = guestCart.findIndex(
-          (item: CartItem) => item.product_id === product.id && item.size === size && item.color === color
-        );
-
-        if (existingItemIndex >= 0) {
-          guestCart[existingItemIndex].quantity += quantity;
-        } else {
-          guestCart.push({
-            id: `guest_${Date.now()}_${Math.random()}`,
-            cart_id: 'guest',
-            product_id: product.id,
-            product,
-            size,
-            color,
-            quantity,
-            created_at: new Date().toISOString(),
-          });
-        }
-
-        localStorage.setItem('guest_cart', JSON.stringify(guestCart));
-        setCartItems(guestCart);
-        
         toast({
-          title: 'Added to Cart',
-          description: `${product.name} has been added to your cart.`,
+          title: 'Login Required',
+          description: 'Please log in to add items to your cart.',
+          variant: 'destructive',
         });
       } else {
-        throw new Error('Failed to add to cart');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to add to cart (${response.status})`);
       }
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -121,7 +98,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const removeFromCart = async (itemId: string) => {
     try {
       setLoading(true);
-      
+
       // If authenticated, call API
       if (cart) {
         const response = await fetch(`/api/cart/${cart.id}/items/${itemId}`, {
@@ -134,11 +111,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
           throw new Error('Failed to remove from cart');
         }
       } else {
-        // Guest cart - remove from localStorage
-        const guestCart = JSON.parse(localStorage.getItem('guest_cart') || '[]');
-        const updatedCart = guestCart.filter((item: CartItem) => item.id !== itemId);
-        localStorage.setItem('guest_cart', JSON.stringify(updatedCart));
-        setCartItems(updatedCart);
+        toast({
+          title: 'Login Required',
+          description: 'Please log in to manage your cart.',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Error removing from cart:', error);
@@ -155,7 +132,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const updateQuantity = async (itemId: string, quantity: number) => {
     try {
       setLoading(true);
-      
+
       if (quantity <= 0) {
         await removeFromCart(itemId);
         return;
@@ -177,15 +154,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
           throw new Error('Failed to update quantity');
         }
       } else {
-        // Guest cart - update localStorage
-        const guestCart = JSON.parse(localStorage.getItem('guest_cart') || '[]');
-        const itemIndex = guestCart.findIndex((item: CartItem) => item.id === itemId);
-        
-        if (itemIndex >= 0) {
-          guestCart[itemIndex].quantity = quantity;
-          localStorage.setItem('guest_cart', JSON.stringify(guestCart));
-          setCartItems(guestCart);
-        }
+        toast({
+          title: 'Login Required',
+          description: 'Please log in to manage your cart.',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Error updating quantity:', error);
@@ -202,7 +175,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = async () => {
     try {
       setLoading(true);
-      
+
       if (cart) {
         const response = await fetch(`/api/cart/${cart.id}`, {
           method: 'DELETE',
@@ -215,9 +188,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
           throw new Error('Failed to clear cart');
         }
       } else {
-        // Guest cart - clear localStorage
-        localStorage.removeItem('guest_cart');
-        setCartItems([]);
+        toast({
+          title: 'Login Required',
+          description: 'Please log in to manage your cart.',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Error clearing cart:', error);

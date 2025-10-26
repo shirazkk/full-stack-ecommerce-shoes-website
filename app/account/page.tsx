@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getUser, signOut } from '@/lib/auth/client';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function AccountPage() {
   const [user, setUser] = useState<any>(null);
@@ -105,9 +106,15 @@ export default function AccountPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
-                <User className="h-8 w-8 text-gray-600" />
-              </div>
+              <Avatar className="w-16 h-16">
+                <AvatarImage 
+                  src={user.avatar_url} 
+                  alt={user.full_name || 'User avatar'} 
+                />
+                <AvatarFallback className="w-16 h-16 text-lg">
+                  {user.full_name ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase() : <User className="h-8 w-8" />}
+                </AvatarFallback>
+              </Avatar>
               <div>
                 <h3 className="text-lg font-semibold">{user.full_name || 'No name set'}</h3>
                 <p className="text-gray-600">{user.email}</p>

@@ -100,13 +100,13 @@ export default function AccountSettingsPage() {
       // Upload to Supabase Storage
       const fileExt = file.name.split(".").pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const filePath = `${user.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
         .upload(filePath, file, {
           cacheControl: "3600",
-          upsert: false,
+          upsert: true, // Allow overwriting existing files
         });
 
       if (uploadError) {
@@ -155,23 +155,77 @@ export default function AccountSettingsPage() {
       setSaving(true);
       const supabase = createClient();
 
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          full_name: fullName,
-          phone: phone,
-          avatar_url: avatarUrl,
-        })
-        .eq("id", user.id);
+      console.log("Updating profile with:", {
+        full_name: fullName,
+        phone: phone,
+        avatar_url: avatarUrl,
+        user_id: user.id
+      });
 
-      if (error) {
-        throw error;
+      // First, ensure the profile exists in the profiles table
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id)
+        .single();
+
+      if (!existingProfile) {
+        // Create profile if it doesn't exist (for OAuth users)
+        const { error: createError } = await supabase
+          .from("profiles")
+          .insert({
+            id: user.id,
+            email: user.email,
+            full_name: fullName,
+            phone: phone,
+            avatar_url: avatarUrl,
+            role: 'user'
+          });
+
+        if (createError) {
+          console.error("Error creating profile:", createError);
+          throw createError;
+        }
+      } else {
+        // Update existing profile
+        const { data, error } = await supabase
+          .from("profiles")
+          .update({
+            full_name: fullName,
+            phone: phone,
+            avatar_url: avatarUrl,
+          })
+          .eq("id", user.id)
+          .select();
+
+        if (error) {
+          console.error("Database error:", error);
+          throw error;
+        }
+
+        console.log("Update result:", data);
+      }
+
+      // Also update the auth.users metadata for OAuth users
+      const { error: authError } = await supabase.auth.updateUser({
+        data: {
+          full_name: fullName,
+          avatar_url: avatarUrl,
+        }
+      });
+
+      if (authError) {
+        console.error("Error updating auth metadata:", authError);
+        // Don't throw error here, profile update was successful
       }
 
       toast({
         title: "Profile Updated",
         description: "Your profile has been updated successfully.",
       });
+
+      // Refresh user data
+      await loadUser();
     } catch (error) {
       console.error("Error updating profile:", error);
       toast({

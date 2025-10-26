@@ -39,9 +39,8 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         const data = await response.json();
         setWishlist(data.wishlist || []);
       } else if (response.status === 401) {
-        // User not authenticated, use guest wishlist from localStorage
-        const guestWishlist = JSON.parse(localStorage.getItem('guest_wishlist') || '[]');
-        setWishlist(guestWishlist);
+        // User not authenticated, clear wishlist
+        setWishlist([]);
       }
     } catch (error) {
       console.error('Error fetching wishlist:', error);
@@ -72,33 +71,25 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
           description: `${product.name} has been added to your wishlist.`,
         });
       } else if (response.status === 401) {
-        // User not authenticated, use guest wishlist
-        const guestWishlist = JSON.parse(localStorage.getItem('guest_wishlist') || '[]');
-        
-        // Check if already in wishlist
-        const existingItem = guestWishlist.find((item: WishlistItem) => item.product_id === product.id);
-        if (!existingItem) {
-          guestWishlist.push({
-            id: `guest_${Date.now()}_${Math.random()}`,
-            product_id: product.id,
-            product,
-            created_at: new Date().toISOString(),
-          });
-          localStorage.setItem('guest_wishlist', JSON.stringify(guestWishlist));
-          setWishlist(guestWishlist);
-          
-          toast({
-            title: 'Added to Wishlist',
-            description: `${product.name} has been added to your wishlist.`,
-          });
-        } else {
+        toast({
+          title: 'Login Required',
+          description: 'Please log in to add items to your wishlist.',
+          variant: 'destructive',
+        });
+      } else if (response.status === 400) {
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.error === 'Item already in wishlist') {
           toast({
             title: 'Already in Wishlist',
             description: `${product.name} is already in your wishlist.`,
+            variant: 'destructive',
           });
+        } else {
+          throw new Error(errorData.error || 'Failed to add to wishlist');
         }
       } else {
-        throw new Error('Failed to add to wishlist');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to add to wishlist (${response.status})`);
       }
     } catch (error) {
       console.error('Error adding to wishlist:', error);
@@ -124,13 +115,14 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         await fetchWishlist(); // Refresh wishlist
       } else if (response.status === 401) {
-        // Guest wishlist - remove from localStorage
-        const guestWishlist = JSON.parse(localStorage.getItem('guest_wishlist') || '[]');
-        const updatedWishlist = guestWishlist.filter((item: WishlistItem) => item.product_id !== productId);
-        localStorage.setItem('guest_wishlist', JSON.stringify(updatedWishlist));
-        setWishlist(updatedWishlist);
+        toast({
+          title: 'Login Required',
+          description: 'Please log in to manage your wishlist.',
+          variant: 'destructive',
+        });
       } else {
-        throw new Error('Failed to remove from wishlist');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to remove from wishlist (${response.status})`);
       }
     } catch (error) {
       console.error('Error removing from wishlist:', error);

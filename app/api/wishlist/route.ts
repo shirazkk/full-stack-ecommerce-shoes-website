@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient();
     const { data: wishlist, error } = await supabase
-      .from('wishlist')
+      .from('wishlists')
       .select(`
         *,
         product:products (*)
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     
     // Check if item already exists in wishlist
     const { data: existingItem } = await supabase
-      .from('wishlist')
+      .from('wishlists')
       .select('id')
       .eq('user_id', user.id)
       .eq('product_id', productId)
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     // Add to wishlist
     const { data: wishlistItem, error } = await supabase
-      .from('wishlist')
+      .from('wishlists')
       .insert({
         user_id: user.id,
         product_id: productId,

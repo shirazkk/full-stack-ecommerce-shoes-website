@@ -53,10 +53,21 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      return NextResponse.json({ cart: newCart });
+      return NextResponse.json({ 
+        cart: {
+          ...newCart,
+          items: newCart.cart_items || []
+        }
+      });
     }
 
-    return NextResponse.json({ cart });
+    // Cart exists, return it with items
+    return NextResponse.json({ 
+      cart: {
+        ...cart,
+        items: cart.cart_items || []
+      }
+    });
   } catch (error) {
     console.error('Error fetching cart:', error);
     return NextResponse.json(
@@ -87,7 +98,13 @@ export async function POST(request: NextRequest) {
     // Get or create cart
     let { data: cart } = await supabase
       .from('carts')
-      .select('id')
+      .select(`
+        *,
+        cart_items (
+          *,
+          product:products (*)
+        )
+      `)
       .eq('user_id', user.id)
       .single();
 
@@ -95,7 +112,13 @@ export async function POST(request: NextRequest) {
       const { data: newCart, error: createError } = await supabase
         .from('carts')
         .insert({ user_id: user.id })
-        .select('id')
+        .select(`
+          *,
+          cart_items (
+            *,
+            product:products (*)
+          )
+        `)
         .single();
 
       if (createError) {
@@ -108,31 +131,87 @@ export async function POST(request: NextRequest) {
       cart = newCart;
     }
 
-    // Add item to cart
-    const { data: cartItem, error: itemError } = await supabase
+    // Check if item already exists in cart
+    const { data: existingItem } = await supabase
       .from('cart_items')
-      .insert({
-        cart_id: cart.id,
-        product_id: productId,
-        quantity,
-        size,
-        color,
-      })
-      .select(`
-        *,
-        product:products (*)
-      `)
+      .select('*')
+      .eq('cart_id', cart.id)
+      .eq('product_id', productId)
+      .eq('size', size)
+      .eq('color', color)
       .single();
 
-    if (itemError) {
-      console.error('Error adding item to cart:', itemError);
-      return NextResponse.json(
-        { error: 'Failed to add item to cart' },
-        { status: 500 }
-      );
+    let cartItem;
+
+    if (existingItem) {
+      // Update quantity if item already exists
+      const { data, error: updateError } = await supabase
+        .from('cart_items')
+        .update({ quantity: existingItem.quantity + quantity })
+        .eq('id', existingItem.id)
+        .select(`
+          *,
+          product:products (*)
+        `)
+        .single();
+
+      if (updateError) {
+        console.error('Error updating cart item:', updateError);
+        return NextResponse.json(
+          { error: 'Failed to update cart item' },
+          { status: 500 }
+        );
+      }
+
+      cartItem = data;
+    } else {
+      // Add new item to cart
+      const { data, error: itemError } = await supabase
+        .from('cart_items')
+        .insert({
+          cart_id: cart.id,
+          product_id: productId,
+          quantity,
+          size,
+          color,
+        })
+        .select(`
+          *,
+          product:products (*)
+        `)
+        .single();
+
+      if (itemError) {
+        console.error('Error adding item to cart:', itemError);
+        return NextResponse.json(
+          { error: 'Failed to add item to cart' },
+          { status: 500 }
+        );
+      }
+
+      cartItem = data;
     }
 
-    return NextResponse.json({ cartItem });
+    // Fetch updated cart with all items
+    const { data: updatedCart } = await supabase
+      .from('carts')
+      .select(`
+        *,
+        cart_items (
+          *,
+          product:products (*)
+        )
+      `)
+      .eq('id', cart.id)
+      .single();
+
+    return NextResponse.json({ 
+      cartItem, 
+      cart: {
+        ...updatedCart,
+        items: updatedCart.cart_items || []
+      }
+    });
   } catch (error) {
     console.error('Error adding to cart:', error);
     return NextResponse.json(

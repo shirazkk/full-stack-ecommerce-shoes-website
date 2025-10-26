@@ -41,19 +41,19 @@ const categories = [
   {
     name: "Men's Shoes",
     href: '/products?category=mens-shoes',
-    image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&h=400&fit=crop',
+    image: 'https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/mens-shoes/flying-colorful-womens-sneaker-isolated-on-white-background-fashionable-stylish-sports-shoe.jpg',
     description: 'Premium footwear for men',
   },
   {
     name: "Women's Shoes",
     href: '/products?category=womens-shoes',
-    image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&h=400&fit=crop',
+    image: 'https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/womens-shoes/pexels-photo-134064.jpeg',
     description: 'Elegant and comfortable shoes for women',
   },
   {
     name: "Kids' Shoes",
     href: '/products?category=kids-shoes',
-    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&h=400&fit=crop',
+    image: 'https://pwyzxwidebovzxwdxoep.supabase.co/storage/v1/object/public/product-images/products/kids-shoes/pexels-photo-1598505.jpeg',
     description: 'Fun and comfortable shoes for kids',
   },
 ];

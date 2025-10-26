@@ -1,151 +1,234 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Slider } from '@/components/ui/slider';
-import { Heart, Search, Filter, Grid, List, Star, ShoppingCart } from 'lucide-react';
-import { Product } from '@/types';
-import { useToast } from '@/hooks/use-toast';
-import { addToGuestCart } from '@/lib/services/cart.service';
-import { isInGuestWishlist, addToGuestWishlist, removeFromGuestWishlist } from '@/lib/services/wishlist.service';
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Slider } from "@/components/ui/slider";
+import {
+  Heart,
+  Search,
+  Filter,
+  Grid,
+  List,
+  Star,
+  ShoppingCart,
+} from "lucide-react";
+import { Product } from "@/types";
+import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/hooks/use-cart";
+import { useWishlist } from "@/hooks/use-wishlist";
 
-const categories = [
-  { id: 'all', name: 'All Products', slug: 'all' },
-  { id: 'mens-shoes', name: "Men's Shoes", slug: 'mens-shoes' },
-  { id: 'womens-shoes', name: "Women's Shoes", slug: 'womens-shoes' },
-  { id: 'kids-shoes', name: "Kids' Shoes", slug: 'kids-shoes' },
-  { id: 'running-shoes', name: 'Running', slug: 'running-shoes' },
-  { id: 'basketball-shoes', name: 'Basketball', slug: 'basketball-shoes' },
-  { id: 'casual-sneakers', name: 'Casual', slug: 'casual-sneakers' },
-];
-
-const brands = ['Nike', 'Adidas', 'Puma', 'New Balance', 'Converse', 'Vans', 'Reebok', 'Asics', 'Brooks', 'Hoka'];
+// Categories and brands will be fetched from API
 
 const sortOptions = [
-  { value: 'newest', label: 'Newest First' },
-  { value: 'price-low', label: 'Price: Low to High' },
-  { value: 'price-high', label: 'Price: High to Low' },
-  { value: 'rating', label: 'Highest Rated' },
-  { value: 'popular', label: 'Most Popular' },
+  { value: "created_at", label: "Newest First" },
+  { value: "price", label: "Price: Low to High" },
+  { value: "price-desc", label: "Price: High to Low" },
+  { value: "rating", label: "Highest Rated" },
+  { value: "reviews_count", label: "Most Popular" },
+  { value: "name", label: "Name: A to Z" },
 ];
 
 export default function ProductsPage() {
-  // const searchParams = useSearchParams();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
-  
+  const [categories, setCategories] = useState<
+    Array<{ id: string; name: string; slug: string }>
+  >([]);
+  const [brands, setBrands] = useState<string[]>([]);
+
   // Filters
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState([0, 500]);
-  const [sortBy, setSortBy] = useState('newest');
+  const [sortBy, setSortBy] = useState("created_at");
 
-  // Fetch products from API
+  // Read URL parameters and set initial state
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        
-        // Build query parameters
-        const params = new URLSearchParams();
-        
-        // Category filter
-        if (selectedCategory !== 'all') {
-          params.append('category', selectedCategory);
-        }
-        
-        // Search query
-        if (searchQuery) {
-          params.append('search', searchQuery);
-        }
-        
-        // Brand filters
-        if (selectedBrands.length > 0) {
-          selectedBrands.forEach(brand => params.append('brands', brand));
-        }
-        
-        // Price range
-        if (priceRange[0] > 0) {
-          params.append('minPrice', priceRange[0].toString());
-        }
-        if (priceRange[1] < 500) {
-          params.append('maxPrice', priceRange[1].toString());
-        }
-        
-        // Sort
-        const sortMapping: { [key: string]: { sortBy: string; sortOrder: string } } = {
-          'newest': { sortBy: 'created_at', sortOrder: 'desc' },
-          'price-low': { sortBy: 'price', sortOrder: 'asc' },
-          'price-high': { sortBy: 'price', sortOrder: 'desc' },
-          'rating': { sortBy: 'rating', sortOrder: 'desc' },
-          'popular': { sortBy: 'reviews_count', sortOrder: 'desc' },
-        };
-        
-        const sortConfig = sortMapping[sortBy];
-        if (sortConfig) {
-          params.append('sortBy', sortConfig.sortBy);
-          params.append('sortOrder', sortConfig.sortOrder);
-        }
-        
-        const response = await fetch(`/api/products?${params.toString()}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch products');
-        }
-        
-        const data = await response.json();
-        setProducts(data.products || []);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load products. Please try again.',
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
+    const category = searchParams.get("category");
+    const search = searchParams.get("search");
+    const brands = searchParams.getAll("brands");
+    const minPrice = searchParams.get("minPrice");
+    const maxPrice = searchParams.get("maxPrice");
+    const sort = searchParams.get("sort");
+
+    if (category) {
+      setSelectedCategory(category);
+    }
+    if (search) {
+      setSearchQuery(search);
+    }
+    if (brands.length > 0) {
+      setSelectedBrands(brands);
+    }
+    if (minPrice && maxPrice) {
+      setPriceRange([parseInt(minPrice), parseInt(maxPrice)]);
+    }
+    if (sort) {
+      setSortBy(sort);
+    }
+  }, [searchParams]);
+
+  // Fetch categories and brands
+  const fetchCategoriesAndBrands = useCallback(async () => {
+    try {
+      // Fetch categories
+      const categoriesResponse = await fetch("/api/categories");
+      if (categoriesResponse.ok) {
+        const categoriesData = await categoriesResponse.json();
+        setCategories([
+          { id: "all", name: "All Products", slug: "all" },
+          ...categoriesData.categories.map((cat: any) => ({
+            id: cat.slug,
+            name: cat.name,
+            slug: cat.slug,
+          })),
+        ]);
       }
+
+      // Fetch brands
+      const brandsResponse = await fetch("/api/brands");
+      if (brandsResponse.ok) {
+        const brandsData = await brandsResponse.json();
+        setBrands(brandsData.brands);
+      }
+    } catch (error) {
+      console.error("Error fetching categories and brands:", error);
+    }
+  }, []);
+
+  // Fetch categories and brands on mount
+  useEffect(() => {
+    fetchCategoriesAndBrands();
+  }, [fetchCategoriesAndBrands]);
+
+  // Create debounced fetch function
+  const fetchProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      // Build query parameters
+      const params = new URLSearchParams();
+
+      // Category filter
+      if (selectedCategory !== "all") {
+        params.append("category", selectedCategory);
+      }
+
+      // Search query
+      if (searchQuery) {
+        params.append("search", searchQuery);
+      }
+
+      // Brand filters
+      if (selectedBrands.length > 0) {
+        selectedBrands.forEach((brand) => params.append("brands", brand));
+      }
+
+      // Price range
+      if (priceRange[0] > 0) {
+        params.append("minPrice", priceRange[0].toString());
+      }
+      if (priceRange[1] < 500) {
+        params.append("maxPrice", priceRange[1].toString());
+      }
+
+      // Sort
+      const sortMapping: {
+        [key: string]: { sortBy: string; sortOrder: string };
+      } = {
+        created_at: { sortBy: "created_at", sortOrder: "desc" },
+        price: { sortBy: "price", sortOrder: "asc" },
+        "price-desc": { sortBy: "price", sortOrder: "desc" },
+        rating: { sortBy: "rating", sortOrder: "desc" },
+        reviews_count: { sortBy: "reviews_count", sortOrder: "desc" },
+        name: { sortBy: "name", sortOrder: "asc" },
+      };
+
+      const sortConfig = sortMapping[sortBy];
+      if (sortConfig) {
+        params.append("sortBy", sortConfig.sortBy);
+        params.append("sortOrder", sortConfig.sortOrder);
+      }
+
+      const response = await fetch(`/api/products?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch products");
+      }
+
+      const data = await response.json();
+      setProducts(data.products || []);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load products. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    selectedCategory,
+    searchQuery,
+    selectedBrands,
+    priceRange,
+    sortBy,
+    toast,
+  ]);
+
+  // Create debounced version
+  const debouncedFetch = useMemo(() => {
+    let timeoutId: NodeJS.Timeout;
+    return () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(fetchProducts, 300);
     };
+  }, [fetchProducts]);
 
-    fetchProducts();
-  }, [selectedCategory, searchQuery, selectedBrands, priceRange, sortBy, toast]);
+  // Fetch products from API with debouncing
+  useEffect(() => {
+    debouncedFetch();
+  }, [debouncedFetch]);
 
-  const handleWishlistToggle = (product: Product) => {
-    const isWishlisted = isInGuestWishlist(product.id);
-    
+  const handleWishlistToggle = async (product: Product) => {
+    const isWishlisted = isInWishlist(product.id);
+
     if (isWishlisted) {
-      removeFromGuestWishlist(product.id);
-      toast({
-        title: 'Removed from Wishlist',
-        description: `${product.name} has been removed from your wishlist.`,
-      });
+      await removeFromWishlist(product.id);
     } else {
-      addToGuestWishlist(product.id);
-      toast({
-        title: 'Added to Wishlist',
-        description: `${product.name} has been added to your wishlist.`,
-      });
+      await addToWishlist(product);
     }
   };
 
-  const handleAddToCart = (product: Product) => {
-    addToGuestCart(product, product.sizes?.[0] || 'M', product.colors?.[0] || 'Black', 1);
-    toast({
-      title: 'Added to Cart',
-      description: `${product.name} has been added to your cart.`,
-    });
+  const handleAddToCart = async (product: Product) => {
+    await addToCart(
+      product,
+      1,
+      product.sizes?.[0] || "M",
+      product.colors?.[0] || "Black"
+    );
   };
 
   // Products are already filtered and sorted by the API
@@ -178,7 +261,9 @@ export default function ProductsPage() {
             <Card className="sticky top-8">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-nike-gray-900">Filters</h3>
+                  <h3 className="text-lg font-semibold text-nike-gray-900">
+                    Filters
+                  </h3>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -186,11 +271,15 @@ export default function ProductsPage() {
                     className="lg:hidden"
                   >
                     <Filter className="h-4 w-4 mr-2" />
-                    {showFilters ? 'Hide' : 'Show'} Filters
+                    {showFilters ? "Hide" : "Show"} Filters
                   </Button>
                 </div>
 
-                <div className={`space-y-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+                <div
+                  className={`space-y-6 ${
+                    showFilters ? "block" : "hidden lg:block"
+                  }`}
+                >
                   {/* Search */}
                   <div>
                     <label className="text-sm font-medium text-nike-gray-700 mb-2 block">
@@ -212,7 +301,10 @@ export default function ProductsPage() {
                     <label className="text-sm font-medium text-nike-gray-700 mb-2 block">
                       Category
                     </label>
-                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <Select
+                      value={selectedCategory}
+                      onValueChange={setSelectedCategory}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -233,7 +325,10 @@ export default function ProductsPage() {
                     </label>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {brands.map((brand) => (
-                        <div key={brand} className="flex items-center space-x-2">
+                        <div
+                          key={brand}
+                          className="flex items-center space-x-2"
+                        >
                           <Checkbox
                             id={brand}
                             checked={selectedBrands.includes(brand)}
@@ -241,11 +336,16 @@ export default function ProductsPage() {
                               if (checked) {
                                 setSelectedBrands([...selectedBrands, brand]);
                               } else {
-                                setSelectedBrands(selectedBrands.filter(b => b !== brand));
+                                setSelectedBrands(
+                                  selectedBrands.filter((b) => b !== brand)
+                                );
                               }
                             }}
                           />
-                          <label htmlFor={brand} className="text-sm text-nike-gray-700">
+                          <label
+                            htmlFor={brand}
+                            className="text-sm text-nike-gray-700"
+                          >
                             {brand}
                           </label>
                         </div>
@@ -300,16 +400,16 @@ export default function ProductsPage() {
               </p>
               <div className="flex items-center space-x-2">
                 <Button
-                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  variant={viewMode === "grid" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setViewMode('grid')}
+                  onClick={() => setViewMode("grid")}
                 >
                   <Grid className="h-4 w-4" />
                 </Button>
                 <Button
-                  variant={viewMode === 'list' ? 'default' : 'outline'}
+                  variant={viewMode === "list" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setViewMode('list')}
+                  onClick={() => setViewMode("list")}
                 >
                   <List className="h-4 w-4" />
                 </Button>
@@ -319,12 +419,14 @@ export default function ProductsPage() {
             {/* Products */}
             {sortedProducts.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-nike-gray-500 text-lg">No products found matching your criteria.</p>
+                <p className="text-nike-gray-500 text-lg">
+                  No products found matching your criteria.
+                </p>
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setSearchQuery('');
-                    setSelectedCategory('all');
+                    setSearchQuery("");
+                    setSelectedCategory("all");
                     setSelectedBrands([]);
                     setPriceRange([0, 500]);
                   }}
@@ -334,11 +436,13 @@ export default function ProductsPage() {
                 </Button>
               </div>
             ) : (
-              <div className={`grid gap-6 ${
-                viewMode === 'grid' 
-                  ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
-                  : 'grid-cols-1'
-              }`}>
+              <div
+                className={`grid gap-6 ${
+                  viewMode === "grid"
+                    ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                    : "grid-cols-1"
+                }`}
+              >
                 {sortedProducts.map((product, index) => (
                   <motion.div
                     key={product.id}
@@ -348,9 +452,11 @@ export default function ProductsPage() {
                   >
                     <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
                       <div className="relative">
-                        <div className={`relative overflow-hidden ${
-                          viewMode === 'grid' ? 'aspect-square' : 'h-48'
-                        }`}>
+                        <div
+                          className={`relative overflow-hidden ${
+                            viewMode === "grid" ? "aspect-square" : "h-48"
+                          }`}
+                        >
                           <Image
                             src={product.images[0]}
                             alt={product.name}
@@ -368,16 +474,20 @@ export default function ProductsPage() {
                             </Badge>
                           )}
                         </div>
-                        
+
                         <Button
                           variant="ghost"
                           size="icon"
                           className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={() => handleWishlistToggle(product)}
                         >
-                          <Heart className={`h-5 w-5 ${
-                            isInGuestWishlist(product.id) ? 'text-red-500 fill-current' : 'text-nike-gray-400'
-                          }`} />
+                          <Heart
+                            className={`h-5 w-5 ${
+                              isInWishlist(product.id)
+                                ? "text-red-500 fill-current"
+                                : "text-nike-gray-400"
+                            }`}
+                          />
                         </Button>
                       </div>
 
@@ -388,16 +498,18 @@ export default function ProductsPage() {
                               {product.name}
                             </Link>
                           </h3>
-                          <p className="text-sm text-nike-gray-600">{product.brand}</p>
-                          
+                          <p className="text-sm text-nike-gray-600">
+                            {product.brand}
+                          </p>
+
                           <div className="flex items-center space-x-1">
                             {[...Array(5)].map((_, i) => (
                               <Star
                                 key={i}
                                 className={`h-3 w-3 ${
                                   i < Math.floor(product.rating)
-                                    ? 'text-yellow-400 fill-current'
-                                    : 'text-gray-300'
+                                    ? "text-yellow-400 fill-current"
+                                    : "text-gray-300"
                                 }`}
                               />
                             ))}
@@ -423,7 +535,7 @@ export default function ProductsPage() {
                                 </span>
                               )}
                             </div>
-                            
+
                             <Button
                               size="sm"
                               onClick={() => handleAddToCart(product)}

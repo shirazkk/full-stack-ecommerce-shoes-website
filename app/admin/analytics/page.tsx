@@ -55,87 +55,33 @@ export default function AdminAnalyticsPage() {
   const [timeRange, setTimeRange] = useState('30d');
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setData({
-        revenue: {
-          total: 125430.50,
-          change: 12.5,
-          chart: [
-            { date: '2024-01-01', value: 12000 },
-            { date: '2024-01-02', value: 15000 },
-            { date: '2024-01-03', value: 18000 },
-            { date: '2024-01-04', value: 14000 },
-            { date: '2024-01-05', value: 16000 },
-            { date: '2024-01-06', value: 19000 },
-            { date: '2024-01-07', value: 22000 },
-          ],
-        },
-        orders: {
-          total: 1247,
-          change: 8.2,
-          chart: [
-            { date: '2024-01-01', value: 45 },
-            { date: '2024-01-02', value: 52 },
-            { date: '2024-01-03', value: 48 },
-            { date: '2024-01-04', value: 61 },
-            { date: '2024-01-05', value: 55 },
-            { date: '2024-01-06', value: 67 },
-            { date: '2024-01-07', value: 73 },
-          ],
-        },
-        customers: {
-          total: 892,
-          change: 15.7,
-          chart: [
-            { date: '2024-01-01', value: 12 },
-            { date: '2024-01-02', value: 18 },
-            { date: '2024-01-03', value: 15 },
-            { date: '2024-01-04', value: 22 },
-            { date: '2024-01-05', value: 19 },
-            { date: '2024-01-06', value: 25 },
-            { date: '2024-01-07', value: 28 },
-          ],
-        },
-        topProducts: [
-          {
-            id: '1',
-            name: 'Nike Air Max 270',
-            sales: 45,
-            revenue: 5400.00,
-            image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=100&h=100&fit=crop',
-          },
-          {
-            id: '2',
-            name: 'Adidas Ultraboost 22',
-            sales: 38,
-            revenue: 7220.00,
-            image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&h=100&fit=crop',
-          },
-          {
-            id: '3',
-            name: 'Nike Air Force 1',
-            sales: 52,
-            revenue: 4680.00,
-            image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=100&h=100&fit=crop',
-          },
-          {
-            id: '4',
-            name: 'Converse Chuck 70',
-            sales: 67,
-            revenue: 5360.00,
-            image: 'https://images.unsplash.com/photo-1032118-pexels-photo-1032118?w=100&h=100&fit=crop',
-          },
-        ],
-        salesByCategory: [
-          { category: "Men's Shoes", sales: 45, percentage: 35 },
-          { category: "Women's Shoes", sales: 38, percentage: 30 },
-          { category: 'Running Shoes', sales: 25, percentage: 20 },
-          { category: 'Casual Sneakers', sales: 20, percentage: 15 },
-        ],
-      });
-      setLoading(false);
-    }, 1000);
+    const fetchAnalytics = async () => {
+      try {
+        setLoading(true);
+        // For now, we'll use placeholder data since analytics API might not exist
+        // In a real app, you would call: `/api/analytics?timeRange=${timeRange}`
+        const response = await fetch(`/api/analytics?timeRange=${timeRange}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch analytics data');
+        }
+        const analyticsData = await response.json();
+        setData(analyticsData);
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+        // Fallback to empty data structure
+        setData({
+          revenue: { total: 0, change: 0, chart: [] },
+          orders: { total: 0, change: 0, chart: [] },
+          customers: { total: 0, change: 0, chart: [] },
+          topProducts: [],
+          salesByCategory: [],
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
   }, [timeRange]);
 
   if (loading) {

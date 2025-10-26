@@ -15,7 +15,7 @@ export async function DELETE(
 
     const supabase = await createClient();
     const { error } = await supabase
-      .from('wishlist')
+      .from('wishlists')
       .delete()
       .eq('user_id', user.id)
       .eq('product_id', productId);

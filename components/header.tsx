@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { ShoppingCart, Heart, User, Search, Menu, X, Zap } from 'lucide-react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useCart } from '@/hooks/use-cart';
-import { useWishlist } from '@/hooks/use-wishlist';
-import { getUser, signOut } from '@/lib/auth/client';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import Link from "next/link";
+import { ShoppingCart, Heart, User, Search, Menu, X, Zap } from "lucide-react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useCart } from "@/hooks/use-cart";
+import { useWishlist } from "@/hooks/use-wishlist";
+import { getUser, signOut } from "@/lib/auth/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -32,7 +32,7 @@ export function Header() {
         const userData = await getUser();
         setUser(userData);
       } catch (error) {
-        console.error('Error loading user:', error);
+        console.error("Error loading user:", error);
       } finally {
         setLoading(false);
       }
@@ -45,14 +45,14 @@ export function Header() {
       loadUser();
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    
+    window.addEventListener("storage", handleStorageChange);
+
     // Also listen for custom events from account settings
-    window.addEventListener('userUpdated', handleStorageChange);
+    window.addEventListener("userUpdated", handleStorageChange);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('userUpdated', handleStorageChange);
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("userUpdated", handleStorageChange);
     };
   }, []);
 
@@ -61,18 +61,18 @@ export function Header() {
       await signOut();
       setUser(null);
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
     }
   };
 
   const navLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/products', label: 'New & Featured' },
-    { href: '/products?category=mens-shoes', label: 'Men' },
-    { href: '/products?category=womens-shoes', label: 'Women' },
-    { href: '/products?category=kids-shoes', label: 'Kids' },
-    { href: '/products?category=running-shoes', label: 'Running' },
-    { href: '/products?category=basketball-shoes', label: 'Basketball' },
+    { href: "/", label: "Home" },
+    { href: "/products", label: "New & Featured" },
+    { href: "/products?category=mens-shoes", label: "Men" },
+    { href: "/products?category=womens-shoes", label: "Women" },
+    { href: "/products?category=kids-shoes", label: "Kids" },
+    { href: "/products?category=running-shoes", label: "Running" },
+    { href: "/products?category=basketball-shoes", label: "Basketball" },
   ];
 
   return (
@@ -117,7 +117,7 @@ export function Header() {
           <div className="hidden md:flex flex-1 max-w-md mx-8">
             <motion.div
               className={`relative w-full transition-all duration-300 ${
-                searchFocused ? 'scale-105' : 'scale-100'
+                searchFocused ? "scale-105" : "scale-100"
               }`}
             >
               <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-nike-gray-400" />
@@ -134,33 +134,24 @@ export function Header() {
           {/* Action Buttons */}
           <div className="flex items-center gap-2">
             {/* Search Button (Mobile) */}
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button variant="ghost" size="icon" className="md:hidden w-12 h-12">
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden w-12 h-12"
+              >
                 <Search className="h-5 w-5 text-nike-gray-600" />
               </Button>
             </motion.div>
 
-            {/* Wishlist */}
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button variant="ghost" size="icon" className="w-12 h-12" asChild>
-                <Link href="/wishlist">
-                  <Heart className="h-5 w-5 text-nike-gray-600 hover:text-nike-orange-500 transition-colors" />
-                </Link>
-              </Button>
-            </motion.div>
-
             {/* Cart */}
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button variant="ghost" size="icon" className="relative w-12 h-12" asChild>
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative w-12 h-12"
+                asChild
+              >
                 <Link href="/cart">
                   <ShoppingCart className="h-5 w-5 text-nike-gray-600 hover:text-nike-orange-500 transition-colors" />
                   {cartCount > 0 && (
@@ -177,11 +168,13 @@ export function Header() {
             </motion.div>
 
             {/* Wishlist */}
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button variant="ghost" size="icon" className="relative w-12 h-12" asChild>
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative w-12 h-12"
+                asChild
+              >
                 <Link href="/wishlist">
                   <Heart className="h-5 w-5 text-nike-gray-600 hover:text-nike-orange-500 transition-colors" />
                   {wishlistCount > 0 && (
@@ -209,14 +202,20 @@ export function Header() {
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <Button variant="ghost" size="icon" className="hidden md:flex w-12 h-12 p-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="hidden md:flex w-12 h-12 p-0"
+                    >
                       <Avatar className="w-8 h-8">
-                        <AvatarImage 
-                          src={user.avatar_url} 
-                          alt={user.full_name || user.email} 
+                        <AvatarImage
+                          src={user.avatar_url}
+                          alt={user.full_name || user.email}
                         />
                         <AvatarFallback className="bg-nike-orange-500 text-white text-sm font-semibold">
-                          {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                          {user.full_name
+                            ? user.full_name.charAt(0).toUpperCase()
+                            : user.email.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
@@ -225,7 +224,7 @@ export function Header() {
                 <DropdownMenuContent align="end" className="w-56">
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium">{user.full_name || 'User'}</p>
+                      <p className="font-medium">{user.full_name || "User"}</p>
                       <p className="w-[200px] truncate text-sm text-muted-foreground">
                         {user.email}
                       </p>
@@ -249,7 +248,12 @@ export function Header() {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Button variant="ghost" size="icon" className="hidden md:flex w-12 h-12" asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hidden md:flex w-12 h-12"
+                  asChild
+                >
                   <Link href="/login">
                     <User className="h-5 w-5 text-nike-gray-600 hover:text-nike-orange-500 transition-colors" />
                   </Link>
@@ -258,10 +262,7 @@ export function Header() {
             )}
 
             {/* Mobile Menu Button */}
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
               <Button
                 variant="ghost"
                 size="icon"
@@ -289,7 +290,7 @@ export function Header() {
         {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="lg:hidden border-t border-nike-gray-200 bg-white"
@@ -325,7 +326,7 @@ export function Header() {
                     </Link>
                   </motion.div>
                 ))}
-                
+
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}

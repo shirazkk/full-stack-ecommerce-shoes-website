@@ -1,135 +1,169 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, CreditCard, Truck, Shield, Lock } from 'lucide-react';
-import { Product, CartItem } from '@/types';
-import { useToast } from '@/hooks/use-toast';
-import Image from 'next/image';
-import { getGuestCart } from '@/lib/services/cart.service';
-import { getStripe } from '@/lib/stripe/client';
-
-interface CheckoutForm {
-  email: string;
-  firstName: string;
-  lastName: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-  phone: string;
-  shippingMethod: string;
-  paymentMethod: string;
-  saveInfo: boolean;
-  newsletter: boolean;
-}
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowLeft, CreditCard, Truck, Shield, Lock } from "lucide-react";
+import { Product, CartItem } from "@/types";
+import { useToast } from "@/hooks/use-toast";
+import Image from "next/image";
+import { useCart } from "@/hooks/use-cart";
+import { getStripe } from "@/lib/stripe/client";
+import {
+  checkoutFormSchema,
+  validateCheckoutForm,
+  sanitizeCheckoutForm,
+  type CheckoutFormData,
+} from "@/lib/validations/checkout";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { cartItems, loading: cartLoading } = useCart();
   const [currentStep, setCurrentStep] = useState(1);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState<CheckoutForm>({
-    email: '',
-    firstName: '',
-    lastName: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: 'US',
-    phone: '',
-    shippingMethod: 'standard',
-    paymentMethod: 'card',
+  const [formErrors, setFormErrors] = useState<Record<string, string[]>>({});
+  const [form, setForm] = useState<CheckoutFormData>({
+    email: "",
+    firstName: "",
+    lastName: "",
+    address: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    country: "US",
+    phone: "",
+    shippingMethod: "standard",
+    paymentMethod: "card",
     saveInfo: false,
     newsletter: false,
   });
 
   useEffect(() => {
-    const cart = getGuestCart();
-    setCartItems(cart);
-    
-    if (cart.length === 0) {
+    if (!cartLoading && cartItems.length === 0) {
       toast({
-        title: 'Your cart is empty',
-        description: 'Add some products to your cart before checkout.',
-        variant: 'destructive',
+        title: "Your cart is empty",
+        description: "Add some products to your cart before checkout.",
+        variant: "destructive",
       });
-      router.push('/products');
+      router.push("/products");
     }
-  }, [router, toast]);
+  }, [cartItems, cartLoading, router, toast]);
 
   const subtotal = cartItems.reduce((sum, item) => {
     const price = item.product?.sale_price || item.product?.price || 0;
-    return sum + (price * item.quantity);
+    return sum + price * item.quantity;
   }, 0);
 
-  const shipping = form.shippingMethod === 'express' ? 15 : form.shippingMethod === 'overnight' ? 25 : 0;
+  const shipping =
+    form.shippingMethod === "express"
+      ? 15
+      : form.shippingMethod === "overnight"
+      ? 25
+      : 0;
   const tax = subtotal * 0.08; // 8% tax
   const total = subtotal + shipping + tax;
 
-  const handleInputChange = (field: keyof CheckoutForm, value: string | boolean) => {
-    setForm(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (
+    field: keyof CheckoutFormData,
+    value: string | boolean
+  ) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+
+    // Clear error for this field when user starts typing
+    if (formErrors[field]) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const validation = validateCheckoutForm(form);
+
+    if (!validation.success) {
+      setFormErrors(validation.errors || {});
+      return false;
+    }
+
+    setFormErrors({});
+    return true;
+  };
+
+  const sanitizeForm = (): CheckoutFormData => {
+    return sanitizeCheckoutForm(form);
   };
 
   const handleNext = () => {
     if (currentStep === 1) {
       // Validate shipping info
-      if (!form.email || !form.firstName || !form.lastName || !form.address || !form.city || !form.state || !form.zipCode) {
+      if (!validateForm()) {
         toast({
-          title: 'Please fill in all required fields',
-          description: 'All shipping information is required.',
-          variant: 'destructive',
+          title: "Please fix the errors below",
+          description: "All shipping information must be valid to continue.",
+          variant: "destructive",
         });
         return;
       }
     }
-    setCurrentStep(prev => prev + 1);
+    setCurrentStep((prev) => prev + 1);
   };
 
   const handleBack = () => {
-    setCurrentStep(prev => prev - 1);
+    setCurrentStep((prev) => prev - 1);
   };
 
   const handleSubmit = async () => {
+    // Final validation before submission
+    if (!validateForm()) {
+      toast({
+        title: "Please fix the errors below",
+        description: "All form fields must be valid to place your order.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
-    
+
     try {
+      // Sanitize form data before processing
+      const sanitizedData = sanitizeForm();
+
       // In a real app, you would:
-      // 1. Create order in database
+      // 1. Create order in database with sanitized data
       // 2. Create Stripe payment intent
       // 3. Redirect to Stripe Checkout or handle payment
-      
+
       const stripe = await getStripe();
       if (!stripe) {
-        throw new Error('Stripe failed to load');
+        throw new Error("Stripe failed to load");
       }
 
       // Mock successful payment
       toast({
-        title: 'Order Placed Successfully!',
-        description: 'Thank you for your purchase. You will receive a confirmation email shortly.',
+        title: "Order Placed Successfully!",
+        description:
+          "Thank you for your purchase. You will receive a confirmation email shortly.",
       });
-      
-      // Clear cart and redirect
-      localStorage.removeItem('guest_cart');
-      router.push('/account/orders');
-      
+
+      // Redirect to orders page
+      router.push("/account/orders");
     } catch (error) {
       toast({
-        title: 'Payment Failed',
-        description: 'There was an error processing your payment. Please try again.',
-        variant: 'destructive',
+        title: "Payment Failed",
+        description:
+          "There was an error processing your payment. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -140,8 +174,10 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen bg-nike-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-nike-gray-900 mb-4">Your cart is empty</h1>
-          <Button onClick={() => router.push('/products')}>
+          <h1 className="text-2xl font-bold text-nike-gray-900 mb-4">
+            Your cart is empty
+          </h1>
+          <Button onClick={() => router.push("/products")}>
             Continue Shopping
           </Button>
         </div>
@@ -174,17 +210,23 @@ export default function CheckoutPage() {
             <div className="flex items-center justify-between mb-8">
               {[1, 2, 3].map((step) => (
                 <div key={step} className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                    step <= currentStep
-                      ? 'bg-nike-orange-500 text-white'
-                      : 'bg-nike-gray-200 text-nike-gray-600'
-                  }`}>
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                      step <= currentStep
+                        ? "bg-nike-orange-500 text-white"
+                        : "bg-nike-gray-200 text-nike-gray-600"
+                    }`}
+                  >
                     {step}
                   </div>
                   {step < 3 && (
-                    <div className={`w-16 h-1 mx-2 ${
-                      step < currentStep ? 'bg-nike-orange-500' : 'bg-nike-gray-200'
-                    }`} />
+                    <div
+                      className={`w-16 h-1 mx-2 ${
+                        step < currentStep
+                          ? "bg-nike-orange-500"
+                          : "bg-nike-gray-200"
+                      }`}
+                    />
                   )}
                 </div>
               ))}
@@ -212,9 +254,17 @@ export default function CheckoutPage() {
                           id="email"
                           type="email"
                           value={form.email}
-                          onChange={(e) => handleInputChange('email', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("email", e.target.value)
+                          }
                           placeholder="your@email.com"
+                          className={formErrors.email ? "border-red-500" : ""}
                         />
+                        {formErrors.email && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {formErrors.email[0]}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <Label htmlFor="phone">Phone Number</Label>
@@ -222,9 +272,17 @@ export default function CheckoutPage() {
                           id="phone"
                           type="tel"
                           value={form.phone}
-                          onChange={(e) => handleInputChange('phone', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("phone", e.target.value)
+                          }
                           placeholder="(555) 123-4567"
+                          className={formErrors.phone ? "border-red-500" : ""}
                         />
+                        {formErrors.phone && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {formErrors.phone[0]}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -234,18 +292,38 @@ export default function CheckoutPage() {
                         <Input
                           id="firstName"
                           value={form.firstName}
-                          onChange={(e) => handleInputChange('firstName', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("firstName", e.target.value)
+                          }
                           placeholder="John"
+                          className={
+                            formErrors.firstName ? "border-red-500" : ""
+                          }
                         />
+                        {formErrors.firstName && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {formErrors.firstName[0]}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <Label htmlFor="lastName">Last Name *</Label>
                         <Input
                           id="lastName"
                           value={form.lastName}
-                          onChange={(e) => handleInputChange('lastName', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("lastName", e.target.value)
+                          }
                           placeholder="Doe"
+                          className={
+                            formErrors.lastName ? "border-red-500" : ""
+                          }
                         />
+                        {formErrors.lastName && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {formErrors.lastName[0]}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -254,9 +332,17 @@ export default function CheckoutPage() {
                       <Input
                         id="address"
                         value={form.address}
-                        onChange={(e) => handleInputChange('address', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("address", e.target.value)
+                        }
                         placeholder="123 Main Street"
+                        className={formErrors.address ? "border-red-500" : ""}
                       />
+                      {formErrors.address && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formErrors.address[0]}
+                        </p>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -265,27 +351,51 @@ export default function CheckoutPage() {
                         <Input
                           id="city"
                           value={form.city}
-                          onChange={(e) => handleInputChange('city', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("city", e.target.value)
+                          }
                           placeholder="New York"
+                          className={formErrors.city ? "border-red-500" : ""}
                         />
+                        {formErrors.city && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {formErrors.city[0]}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <Label htmlFor="state">State *</Label>
                         <Input
                           id="state"
                           value={form.state}
-                          onChange={(e) => handleInputChange('state', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("state", e.target.value)
+                          }
                           placeholder="NY"
+                          className={formErrors.state ? "border-red-500" : ""}
                         />
+                        {formErrors.state && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {formErrors.state[0]}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <Label htmlFor="zipCode">ZIP Code *</Label>
                         <Input
                           id="zipCode"
                           value={form.zipCode}
-                          onChange={(e) => handleInputChange('zipCode', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("zipCode", e.target.value)
+                          }
                           placeholder="10001"
+                          className={formErrors.zipCode ? "border-red-500" : ""}
                         />
+                        {formErrors.zipCode && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {formErrors.zipCode[0]}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -293,9 +403,13 @@ export default function CheckoutPage() {
                       <Checkbox
                         id="saveInfo"
                         checked={form.saveInfo}
-                        onCheckedChange={(checked) => handleInputChange('saveInfo', checked as boolean)}
+                        onCheckedChange={(checked) =>
+                          handleInputChange("saveInfo", checked as boolean)
+                        }
                       />
-                      <Label htmlFor="saveInfo">Save this information for next time</Label>
+                      <Label htmlFor="saveInfo">
+                        Save this information for next time
+                      </Label>
                     </div>
                   </CardContent>
                 </Card>
@@ -316,36 +430,53 @@ export default function CheckoutPage() {
                   <CardContent>
                     <RadioGroup
                       value={form.shippingMethod}
-                      onValueChange={(value) => handleInputChange('shippingMethod', value)}
+                      onValueChange={(value) =>
+                        handleInputChange("shippingMethod", value)
+                      }
                     >
                       <div className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="flex items-center space-x-3">
                           <RadioGroupItem value="standard" id="standard" />
                           <div>
-                            <Label htmlFor="standard" className="font-semibold">Standard Shipping</Label>
-                            <p className="text-sm text-nike-gray-600">5-7 business days</p>
+                            <Label htmlFor="standard" className="font-semibold">
+                              Standard Shipping
+                            </Label>
+                            <p className="text-sm text-nike-gray-600">
+                              5-7 business days
+                            </p>
                           </div>
                         </div>
                         <span className="font-semibold">FREE</span>
                       </div>
-                      
+
                       <div className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="flex items-center space-x-3">
                           <RadioGroupItem value="express" id="express" />
                           <div>
-                            <Label htmlFor="express" className="font-semibold">Express Shipping</Label>
-                            <p className="text-sm text-nike-gray-600">2-3 business days</p>
+                            <Label htmlFor="express" className="font-semibold">
+                              Express Shipping
+                            </Label>
+                            <p className="text-sm text-nike-gray-600">
+                              2-3 business days
+                            </p>
                           </div>
                         </div>
                         <span className="font-semibold">$15.00</span>
                       </div>
-                      
+
                       <div className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="flex items-center space-x-3">
                           <RadioGroupItem value="overnight" id="overnight" />
                           <div>
-                            <Label htmlFor="overnight" className="font-semibold">Overnight Shipping</Label>
-                            <p className="text-sm text-nike-gray-600">Next business day</p>
+                            <Label
+                              htmlFor="overnight"
+                              className="font-semibold"
+                            >
+                              Overnight Shipping
+                            </Label>
+                            <p className="text-sm text-nike-gray-600">
+                              Next business day
+                            </p>
                           </div>
                         </div>
                         <span className="font-semibold">$25.00</span>
@@ -373,9 +504,12 @@ export default function CheckoutPage() {
                   <CardContent className="space-y-6">
                     <div className="p-6 border-2 border-dashed border-nike-gray-300 rounded-lg text-center">
                       <Lock className="h-8 w-8 text-nike-gray-400 mx-auto mb-4" />
-                      <h3 className="font-semibold text-nike-gray-900 mb-2">Secure Payment</h3>
+                      <h3 className="font-semibold text-nike-gray-900 mb-2">
+                        Secure Payment
+                      </h3>
                       <p className="text-sm text-nike-gray-600 mb-4">
-                        Your payment information is encrypted and secure. We use Stripe for secure payment processing.
+                        Your payment information is encrypted and secure. We use
+                        Stripe for secure payment processing.
                       </p>
                       <div className="flex items-center justify-center space-x-4 text-sm text-nike-gray-500">
                         <Shield className="h-4 w-4" />
@@ -389,9 +523,14 @@ export default function CheckoutPage() {
                       <Checkbox
                         id="newsletter"
                         checked={form.newsletter}
-                        onCheckedChange={(checked) => handleInputChange('newsletter', checked as boolean)}
+                        onCheckedChange={(checked) =>
+                          handleInputChange("newsletter", checked as boolean)
+                        }
                       />
-                      <Label htmlFor="newsletter">Subscribe to our newsletter for updates and exclusive offers</Label>
+                      <Label htmlFor="newsletter">
+                        Subscribe to our newsletter for updates and exclusive
+                        offers
+                      </Label>
                     </div>
                   </CardContent>
                 </Card>
@@ -407,7 +546,7 @@ export default function CheckoutPage() {
               >
                 Back
               </Button>
-              
+
               {currentStep < 3 ? (
                 <Button onClick={handleNext} className="btn-nike-primary">
                   Continue
@@ -424,7 +563,7 @@ export default function CheckoutPage() {
                       Processing...
                     </>
                   ) : (
-                    'Complete Order'
+                    "Complete Order"
                   )}
                 </Button>
               )}
@@ -465,7 +604,12 @@ export default function CheckoutPage() {
                         </p>
                       </div>
                       <div className="text-sm font-semibold">
-                        ${((item.product?.sale_price || item.product?.price || 0) * item.quantity).toFixed(2)}
+                        $
+                        {(
+                          (item.product?.sale_price ||
+                            item.product?.price ||
+                            0) * item.quantity
+                        ).toFixed(2)}
                       </div>
                     </div>
                   ))}
@@ -481,7 +625,9 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Shipping</span>
-                    <span>{shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}</span>
+                    <span>
+                      {shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Tax</span>

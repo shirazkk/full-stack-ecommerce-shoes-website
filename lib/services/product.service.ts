@@ -3,7 +3,7 @@ import { Product, Category } from '@/types';
 
 export interface ProductFilters {
   category?: string;
-  brand?: string;
+  brands?: string[];
   minPrice?: number;
   maxPrice?: number;
   colors?: string[];
@@ -42,11 +42,20 @@ export class ProductService {
 
     // Apply filters
     if (filters.category) {
-      query = query.eq('categories.slug', filters.category);
+      // Get category by slug first
+      const { data: category } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('slug', filters.category)
+        .single();
+      
+      if (category) {
+        query = query.eq('category_id', category.id);
+      }
     }
 
-    if (filters.brand) {
-      query = query.eq('brand', filters.brand);
+    if (filters.brands && filters.brands.length > 0) {
+      query = query.in('brand', filters.brands);
     }
 
     if (filters.minPrice !== undefined) {
