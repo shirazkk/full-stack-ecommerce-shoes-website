@@ -4,7 +4,7 @@ export interface AuthUser {
   id: string;
   email: string;
   role: 'user' | 'admin';
-  full_name?: string;
+  full_name: string;
   avatar_url?: string;
   phone?: string;
 }
@@ -14,9 +14,9 @@ export interface AuthUser {
  */
 export async function getUser(): Promise<AuthUser | null> {
   const supabase = await createClient();
-  
+
   const { data: { user }, error } = await supabase.auth.getUser();
-  
+
   if (error || !user) {
     return null;
   }
@@ -52,11 +52,11 @@ export async function isAdmin(): Promise<boolean> {
 export async function createUser(userData: {
   id: string;
   email: string;
-  full_name?: string;
+  full_name: string;
   phone?: string;
 }) {
   const supabase = await createClient();
-  
+
   const { error } = await supabase
     .from('profiles')
     .insert({
@@ -79,7 +79,7 @@ export async function createUser(userData: {
  */
 export async function authenticateUser(email: string, password: string) {
   const supabase = await createClient();
-  
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,

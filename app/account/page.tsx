@@ -1,17 +1,23 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { User, Package, Heart, Settings, LogOut, ArrowRight } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { getUser, signOut } from '@/lib/auth/client';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useState, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  User,
+  Package,
+  Heart,
+  Settings,
+  LogOut,
+  ArrowRight,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getUser, signOut } from "@/lib/auth/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function AccountPage() {
   const [user, setUser] = useState<any>(null);
@@ -25,11 +31,11 @@ export default function AccountPage() {
       if (userData) {
         setUser(userData);
       } else {
-        router.push('/login?redirectTo=/account');
+        router.push("/login?redirectTo=/account");
       }
     } catch (error) {
-      console.error('Error loading user:', error);
-      router.push('/login?redirectTo=/account');
+      console.error("Error loading user:", error);
+      router.push("/login?redirectTo=/account");
     } finally {
       setLoading(false);
     }
@@ -40,22 +46,22 @@ export default function AccountPage() {
       const { error } = await signOut();
       if (error) {
         toast({
-          title: 'Error',
-          description: 'Failed to sign out. Please try again.',
-          variant: 'destructive',
+          title: "Error",
+          description: "Failed to sign out. Please try again.",
+          variant: "destructive",
         });
       } else {
         toast({
-          title: 'Signed Out',
-          description: 'You have been signed out successfully.',
+          title: "Signed Out",
+          description: "You have been signed out successfully.",
         });
-        router.push('/');
+        router.push("/");
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to sign out. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -93,7 +99,9 @@ export default function AccountPage() {
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-gray-900">My Account</h1>
-          <p className="text-gray-600 mt-2">Manage your account settings and preferences</p>
+          <p className="text-gray-600 mt-2">
+            Manage your account settings and preferences
+          </p>
         </div>
 
         {/* User Info */}
@@ -107,19 +115,29 @@ export default function AccountPage() {
           <CardContent>
             <div className="flex items-center space-x-4">
               <Avatar className="w-16 h-16">
-                <AvatarImage 
-                  src={user.avatar_url} 
-                  alt={user.full_name || 'User avatar'} 
+                <AvatarImage
+                  src={user.avatar_url}
+                  alt={user.full_name || "User avatar"}
                 />
                 <AvatarFallback className="w-16 h-16 text-lg">
-                  {user.full_name ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase() : <User className="h-8 w-8" />}
+                  {user.full_name ? (
+                    user.full_name
+                      .split(" ")
+                      .map((n: string) => n[0])
+                      .join("")
+                      .toUpperCase()
+                  ) : (
+                    <User className="h-8 w-8" />
+                  )}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="text-lg font-semibold">{user.full_name || 'No name set'}</h3>
+                <h3 className="text-lg font-semibold">
+                  {user.full_name || "No name set"}
+                </h3>
                 <p className="text-gray-600">{user.email}</p>
                 <Badge variant="outline" className="mt-1">
-                  {user.role === 'admin' ? 'Administrator' : 'Customer'}
+                  {user.role === "admin" ? "Administrator" : "Customer"}
                 </Badge>
               </div>
             </div>
@@ -140,9 +158,7 @@ export default function AccountPage() {
                 View and track your recent orders
               </p>
               <Button asChild variant="outline" className="w-full">
-                <Link href="/account/orders">
-                  View Orders
-                </Link>
+                <Link href="/account/orders">View Orders</Link>
               </Button>
             </CardContent>
           </Card>
@@ -159,9 +175,7 @@ export default function AccountPage() {
                 Items you&apos;ve saved for later
               </p>
               <Button asChild variant="outline" className="w-full">
-                <Link href="/wishlist">
-                  View Wishlist
-                </Link>
+                <Link href="/wishlist">View Wishlist</Link>
               </Button>
             </CardContent>
           </Card>
@@ -178,9 +192,7 @@ export default function AccountPage() {
                 Update your profile and preferences
               </p>
               <Button asChild variant="outline" className="w-full">
-                <Link href="/account/settings">
-                  Account Settings
-                </Link>
+                <Link href="/account/settings">Account Settings</Link>
               </Button>
             </CardContent>
           </Card>
@@ -192,7 +204,9 @@ export default function AccountPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold">Sign Out</h3>
-                <p className="text-gray-600 text-sm">Sign out of your account</p>
+                <p className="text-gray-600 text-sm">
+                  Sign out of your account
+                </p>
               </div>
               <Button
                 variant="outline"

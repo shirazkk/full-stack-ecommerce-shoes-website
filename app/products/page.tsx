@@ -50,6 +50,10 @@ export default function ProductsPage() {
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  // pagination
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(12);
+  const [total, setTotal] = useState(0);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
   const [categories, setCategories] = useState<
@@ -172,6 +176,10 @@ export default function ProductsPage() {
         params.append("sortOrder", sortConfig.sortOrder);
       }
 
+      // pagination params
+      params.append("limit", String(limit));
+      params.append("offset", String((page - 1) * limit));
+
       const response = await fetch(`/api/products?${params.toString()}`);
       if (!response.ok) {
         throw new Error("Failed to fetch products");
@@ -179,6 +187,7 @@ export default function ProductsPage() {
 
       const data = await response.json();
       setProducts(data.products || []);
+      setTotal(data.total ?? data.count ?? 0);
     } catch (error) {
       console.error("Error fetching products:", error);
       toast({
@@ -196,6 +205,8 @@ export default function ProductsPage() {
     priceRange,
     sortBy,
     toast,
+    page,
+    limit,
   ]);
 
   // Create debounced version
@@ -211,6 +222,18 @@ export default function ProductsPage() {
   useEffect(() => {
     debouncedFetch();
   }, [debouncedFetch]);
+
+  // Reset to page 1 when filters/search/sort change
+  useEffect(() => {
+    setPage(1);
+  }, [
+    selectedCategory,
+    searchQuery,
+    selectedBrands,
+    priceRange,
+    sortBy,
+    limit,
+  ]);
 
   const handleWishlistToggle = async (product: Product) => {
     const isWishlisted = isInWishlist(product.id);
@@ -396,7 +419,8 @@ export default function ProductsPage() {
             {/* Toolbar */}
             <div className="flex items-center justify-between mb-6">
               <p className="text-nike-gray-600">
-                Showing {sortedProducts.length} of {products.length} products
+                Showing {Math.min((page - 1) * limit + 1, total || 0)} -{" "}
+                {Math.min(page * limit, total || 0)} of {total} products
               </p>
               <div className="flex items-center space-x-2">
                 <Button
@@ -550,6 +574,54 @@ export default function ProductsPage() {
                     </Card>
                   </motion.div>
                 ))}
+              </div>
+            )}
+            {/* Pagination controls */}
+            {total > 0 && (
+              <div className="flex items-center justify-between mt-6">
+                <div className="text-sm text-nike-gray-600">
+                  Showing {Math.min((page - 1) * limit + 1, total)} -{" "}
+                  {Math.min(page * limit, total)} of {total}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    Previous
+                  </Button>
+
+                  <div className="flex items-center space-x-1 px-2">
+                    {Array.from({
+                      length: Math.max(1, Math.ceil(total / limit)),
+                    }).map((_, i) => {
+                      const pageNum = i + 1;
+                      return (
+                        <Button
+                          key={pageNum}
+                          size="sm"
+                          variant={pageNum === page ? "default" : "outline"}
+                          onClick={() => setPage(pageNum)}
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setPage((p) => Math.min(Math.ceil(total / limit), p + 1))
+                    }
+                    disabled={page * limit >= total}
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
             )}
           </div>

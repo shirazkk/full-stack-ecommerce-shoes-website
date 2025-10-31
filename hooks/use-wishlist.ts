@@ -3,6 +3,7 @@
 import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { Product } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { getSession } from '@/lib/auth/client';
 
 interface WishlistItem {
   id: string;
@@ -33,8 +34,13 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const fetchWishlist = async () => {
     try {
       setLoading(true);
+      const { session } = await getSession();
+      if (!session) {
+        setWishlist([]);
+        return;
+      }
       const response = await fetch('/api/wishlist');
-      
+
       if (response.ok) {
         const data = await response.json();
         setWishlist(data.wishlist || []);
@@ -52,7 +58,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const addToWishlist = async (product: Product) => {
     try {
       setLoading(true);
-      
+
       const response = await fetch('/api/wishlist', {
         method: 'POST',
         headers: {
@@ -65,7 +71,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         await fetchWishlist(); // Refresh wishlist
-        
+
         toast({
           title: 'Added to Wishlist',
           description: `${product.name} has been added to your wishlist.`,
@@ -106,7 +112,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const removeFromWishlist = async (productId: string) => {
     try {
       setLoading(true);
-      
+
       // If authenticated, call API
       const response = await fetch(`/api/wishlist/${productId}`, {
         method: 'DELETE',

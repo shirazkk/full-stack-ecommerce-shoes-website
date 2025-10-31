@@ -5,7 +5,8 @@ import { z } from 'zod';
 const signupSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
-  fullName: z.string().optional(),
+  fullName: z.string(),
+  phone: z.number().optional()
 });
 
 export async function POST(request: NextRequest) {
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest) {
     const validatedData = signupSchema.parse(body);
 
     const supabase = await createClient();
-    
+
     // Create user with Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: validatedData.email,
@@ -22,6 +23,7 @@ export async function POST(request: NextRequest) {
       options: {
         data: {
           full_name: validatedData.fullName,
+          phone: validatedData.phone
         },
       },
     });

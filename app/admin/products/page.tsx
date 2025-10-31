@@ -1,25 +1,31 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Search, 
-  Plus, 
-  Edit, 
-  Trash2, 
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Search,
+  Plus,
+  Edit,
+  Trash2,
   Eye,
   ArrowUpDown,
   Download,
   RefreshCw,
-  Package
-} from 'lucide-react';
-import Link from 'next/link';
-import Image from 'next/image';
+  Package,
+} from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 interface Product {
   id: string;
@@ -28,98 +34,139 @@ interface Product {
   price: number;
   salePrice?: number;
   stock: number;
-  status: 'active' | 'inactive' | 'draft';
+  status: "active" | "inactive" | "draft";
   category: string;
-  image: string;
+  images: string[];
   createdAt: string;
   sales: number;
 }
 
-
 const statusConfig = {
-  active: { label: 'Active', color: 'bg-green-100 text-green-800' },
-  inactive: { label: 'Inactive', color: 'bg-red-100 text-red-800' },
-  draft: { label: 'Draft', color: 'bg-yellow-100 text-yellow-800' },
+  active: { label: "Active", color: "bg-green-100 text-green-800" },
+  inactive: { label: "Inactive", color: "bg-red-100 text-red-800" },
+  draft: { label: "Draft", color: "bg-yellow-100 text-yellow-800" },
+};
+
+const getStatusInfo = (status?: string) => {
+  // Provide a safe fallback when status is missing or unexpected.
+  if (!status) return { label: "Unknown", color: "bg-gray-100 text-gray-800" };
+  // @ts-ignore - index by dynamic key; fall back if not present
+  return (
+    (statusConfig as any)[status] ?? {
+      label: "Unknown",
+      color: "bg-gray-100 text-gray-800",
+    }
+  );
 };
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('name');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(12);
+  const [total, setTotal] = useState(0);
 
+  // Fetch products with pagination and optional search/category/sort params.
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/products');
-        if (!response.ok) {
-          throw new Error('Failed to fetch products');
-        }
+
+        const params = new URLSearchParams();
+        params.set("limit", String(limit));
+        params.set("offset", String((page - 1) * limit));
+        if (searchQuery) params.set("search", searchQuery);
+        if (categoryFilter && categoryFilter !== "all") params.set("category", categoryFilter);
+        // map sortBy to backend-supported field names
+        const sortMap: Record<string, string> = {
+          name: "name",
+          price: "price",
+          created: "created_at",
+          rating: "rating",
+        };
+        if (sortBy) params.set("sortBy", sortMap[sortBy] || sortBy);
+        if (sortOrder) params.set("sortOrder", sortOrder);
+
+        const url = `/api/products?${params.toString()}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Failed to fetch products");
         const data = await response.json();
+
         setProducts(data.products || []);
         setFilteredProducts(data.products || []);
+        setTotal(data.total ?? 0);
       } catch (error) {
-        console.error('Error fetching products:', error);
-        // Fallback to empty array on error
+        console.error("Error fetching products:", error);
         setProducts([]);
         setFilteredProducts([]);
+        setTotal(0);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, []);
+  }, [page, limit, searchQuery, categoryFilter, sortBy, sortOrder]);
+
+  // Reset to first page when filters/search/sort change to avoid empty pages
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, categoryFilter, sortBy, sortOrder, limit]);
 
   useEffect(() => {
     let filtered = products;
 
     // Search filter
     if (searchQuery) {
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchQuery.toLowerCase())
+      filtered = filtered.filter(
+        (product) =>
+          product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          product.category.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
     // Status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(product => product.status === statusFilter);
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((product) => product.status === statusFilter);
     }
 
     // Category filter
-    if (categoryFilter !== 'all') {
-      filtered = filtered.filter(product => product.category === categoryFilter);
+    if (categoryFilter !== "all") {
+      filtered = filtered.filter(
+        (product) => product.category === categoryFilter
+      );
     }
 
     // Sort
     filtered.sort((a, b) => {
       let aValue: any, bValue: any;
-      
+
       switch (sortBy) {
-        case 'name':
+        case "name":
           aValue = a.name;
           bValue = b.name;
           break;
-        case 'price':
+        case "price":
           aValue = a.salePrice || a.price;
           bValue = b.salePrice || b.price;
           break;
-        case 'stock':
+        case "stock":
           aValue = a.stock;
           bValue = b.stock;
           break;
-        case 'sales':
+        case "sales":
           aValue = a.sales;
           bValue = b.sales;
           break;
-        case 'created':
+        case "created":
           aValue = new Date(a.createdAt).getTime();
           bValue = new Date(b.createdAt).getTime();
           break;
@@ -128,7 +175,7 @@ export default function AdminProductsPage() {
           bValue = b.name;
       }
 
-      if (sortOrder === 'asc') {
+      if (sortOrder === "asc") {
         return aValue > bValue ? 1 : -1;
       } else {
         return aValue < bValue ? 1 : -1;
@@ -139,13 +186,17 @@ export default function AdminProductsPage() {
   }, [products, searchQuery, statusFilter, categoryFilter, sortBy, sortOrder]);
 
   const handleDeleteProduct = (productId: string) => {
-    setProducts(prev => prev.filter(product => product.id !== productId));
+    setProducts((prev) => prev.filter((product) => product.id !== productId));
   };
 
   const handleStatusChange = (productId: string, newStatus: string) => {
-    setProducts(prev => prev.map(product => 
-      product.id === productId ? { ...product, status: newStatus as any } : product
-    ));
+    setProducts((prev) =>
+      prev.map((product) =>
+        product.id === productId
+          ? { ...product, status: newStatus as any }
+          : product
+      )
+    );
   };
 
   if (loading) {
@@ -169,7 +220,9 @@ export default function AdminProductsPage() {
         className="flex items-center justify-between"
       >
         <div>
-          <h1 className="text-3xl font-bold text-nike-gray-900">Product Management</h1>
+          <h1 className="text-3xl font-bold text-nike-gray-900">
+            Product Management
+          </h1>
           <p className="text-nike-gray-600 mt-2">
             Manage your product catalog and inventory
           </p>
@@ -224,16 +277,25 @@ export default function AdminProductsPage() {
                     <SelectItem value="draft">Draft</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <Select
+                  value={categoryFilter}
+                  onValueChange={setCategoryFilter}
+                >
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="Men's Shoes">Men&apos;s Shoes</SelectItem>
-                    <SelectItem value="Women's Shoes">Women&apos;s Shoes</SelectItem>
+                    <SelectItem value="Men's Shoes">
+                      Men&apos;s Shoes
+                    </SelectItem>
+                    <SelectItem value="Women's Shoes">
+                      Women&apos;s Shoes
+                    </SelectItem>
                     <SelectItem value="Running Shoes">Running Shoes</SelectItem>
-                    <SelectItem value="Casual Sneakers">Casual Sneakers</SelectItem>
+                    <SelectItem value="Casual Sneakers">
+                      Casual Sneakers
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={sortBy} onValueChange={setSortBy}>
@@ -251,7 +313,9 @@ export default function AdminProductsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                  onClick={() =>
+                    setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                  }
                 >
                   <ArrowUpDown className="h-4 w-4" />
                 </Button>
@@ -278,26 +342,31 @@ export default function AdminProductsPage() {
               <Card className="group hover:shadow-lg transition-all duration-300">
                 <div className="relative">
                   <div className="aspect-square relative overflow-hidden rounded-t-lg">
-                    <Image
-                      src={product.image}
-                      alt={product.name}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                    {product.images ? (
+                      <Image
+                        src={product.images[0]}
+                        alt={product.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-100 flex items-center justify-center text-xs text-gray-400">
+                        No Image
+                      </div>
+                    )}
+
                     <div className="absolute top-3 left-3">
-                      <Badge className={statusConfig[product.status].color}>
-                        {statusConfig[product.status].label}
+                      <Badge className={getStatusInfo(product.status).color}>
+                        {getStatusInfo(product.status).label}
                       </Badge>
                     </div>
                     {product.salePrice && (
                       <div className="absolute top-3 right-3">
-                        <Badge className="bg-red-500 text-white">
-                          Sale
-                        </Badge>
+                        <Badge className="bg-red-500 text-white">Sale</Badge>
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <div className="flex space-x-2">
                       <Button variant="secondary" size="sm" asChild>
@@ -319,9 +388,13 @@ export default function AdminProductsPage() {
                     <h3 className="font-semibold text-nike-gray-900 group-hover:text-nike-orange-500 transition-colors">
                       {product.name}
                     </h3>
-                    <p className="text-sm text-nike-gray-600">{product.brand}</p>
-                    <p className="text-xs text-nike-gray-500">{product.category}</p>
-                    
+                    <p className="text-sm text-nike-gray-600">
+                      {product.brand}
+                    </p>
+                    <p className="text-xs text-nike-gray-500">
+                      {product.category}
+                    </p>
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         {product.salePrice ? (
@@ -357,8 +430,8 @@ export default function AdminProductsPage() {
                             <Edit className="h-4 w-4" />
                           </Link>
                         </Button>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
                           onClick={() => handleDeleteProduct(product.id)}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -368,7 +441,9 @@ export default function AdminProductsPage() {
                       </div>
                       <Select
                         value={product.status}
-                        onValueChange={(value) => handleStatusChange(product.id, value)}
+                        onValueChange={(value) =>
+                          handleStatusChange(product.id, value)
+                        }
                       >
                         <SelectTrigger className="w-24 h-8 text-xs">
                           <SelectValue />
@@ -386,20 +461,64 @@ export default function AdminProductsPage() {
             </motion.div>
           ))}
         </div>
-
         {filteredProducts.length === 0 && (
           <Card>
             <CardContent className="text-center py-12">
               <Package className="h-16 w-16 text-nike-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-nike-gray-900 mb-2">No products found</h3>
+              <h3 className="text-lg font-semibold text-nike-gray-900 mb-2">
+                No products found
+              </h3>
               <p className="text-nike-gray-600 mb-6">
-                No products match your current filters. Try adjusting your search criteria.
+                No products match your current filters. Try adjusting your
+                search criteria.
               </p>
               <Button asChild>
                 <Link href="/admin/products/new">Add Your First Product</Link>
               </Button>
             </CardContent>
           </Card>
+        )}
+
+        {/* Pagination controls */}
+        {total > 0 && (
+          <div className="flex items-center justify-between mt-6">
+            <div className="text-sm text-nike-gray-600">
+              Showing {(page - 1) * limit + 1} - {Math.min(page * limit, total)} of {total} products
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                Previous
+              </Button>
+              <div className="flex items-center space-x-1 px-2">
+                {Array.from({ length: Math.max(1, Math.ceil(total / limit)) }).map((_, i) => {
+                  const pageNum = i + 1;
+                  return (
+                    <Button
+                      key={pageNum}
+                      size="sm"
+                      variant={pageNum === page ? "default" : "outline"}
+                      onClick={() => setPage(pageNum)}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={page * limit >= total}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         )}
       </motion.div>
     </div>

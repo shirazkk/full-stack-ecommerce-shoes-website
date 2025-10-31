@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { createOrder, getUserOrders, getAllOrders } from '@/lib/services/order.service';
 import { getUser, isAdmin } from '@/lib/auth/server';
 
@@ -19,13 +18,13 @@ export async function GET(request: NextRequest) {
 
     let orders;
     const offset = (page - 1) * limit;
-    
+
     if (isAdminUser) {
       // Admin can see all orders
-      orders = await getAllOrders(status, limit, offset);
+      orders = await getAllOrders(status || undefined, limit, offset);
     } else {
       // Regular users can only see their own orders
-      orders = await getUserOrders(user.id, status, limit, offset);
+      orders = await getUserOrders(user.id, status || undefined, limit, offset);
     }
 
     return NextResponse.json({ orders });

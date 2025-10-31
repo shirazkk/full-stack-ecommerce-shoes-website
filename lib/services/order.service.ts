@@ -19,52 +19,72 @@ export async function createOrder(
 ): Promise<Order | null> {
   const supabase = await createClient();
 
-  // Generate order number
-  const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+  // Validation
+  if (!userId || !items?.length || !shippingAddress) return null;
 
-  // Create order
-  const { data: order, error: orderError } = await supabase
-    .from('orders')
-    .insert({
-      user_id: userId,
-      order_number: orderNumber,
-      status: 'pending',
-      subtotal,
-      tax,
-      shipping,
-      total,
-      stripe_payment_intent_id: stripePaymentIntentId,
-      shipping_address: shippingAddress,
-    })
-    .select()
-    .single();
+  try {
+    // Generate order number
+    const orderNumber = `ORD-${Date.now()}-${Math.random()
+      .toString(36)
+      .substr(2, 9)
+      .toUpperCase()}`;
 
-  if (orderError) {
-    console.error('Error creating order:', orderError);
+    // 1️⃣ Create the order
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        user_id: userId,
+        order_number: orderNumber,
+        status: 'pending',
+        subtotal,
+        tax,
+        shipping,
+        total,
+        stripe_payment_intent_id: stripePaymentIntentId,
+        shipping_address: shippingAddress,
+      })
+      .select()
+      .single();
+
+    if (orderError || !order) {
+      console.error('Error creating order:', orderError);
+      return null;
+    }
+
+    // 2️⃣ Create order items
+    const orderItemsData = items.map(item => ({
+      order_id: order.id,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      size: item.size,
+      color: item.color,
+      price: item.price,
+    }));
+
+    const { data: orderItems, error: itemsError } = await supabase
+      .from('order_items')
+      .insert(orderItemsData)
+      .select(); // Return inserted items
+
+    if (itemsError) {
+      console.error('Error creating order items:', itemsError);
+      // Optionally delete the order to avoid orphan orders
+      await supabase.from('orders').delete().eq('id', order.id);
+      return null;
+    }
+
+    // 3️⃣ Return order with inserted items
+    return {
+      ...order,
+      order_items: orderItems as OrderItem[],
+    } as Order;
+
+  } catch (err) {
+    console.error('Unexpected error creating order:', err);
     return null;
   }
-
-  // Create order items
-  const orderItems = items.map(item => ({
-    order_id: order.id,
-    product_id: item.product_id,
-    quantity: item.quantity,
-    size: item.size,
-    color: item.color,
-    price: item.price,
-  }));
-
-  const { error: itemsError } = await supabase
-    .from('order_items')
-    .insert(orderItems);
-
-  if (itemsError) {
-    console.error('Error creating order items:', itemsError);
-    return null;
-  }
-
-  return order as Order;
 }
+
 
 export async function getOrderById(orderId: string): Promise<Order | null> {
   const supabase = await createClient();

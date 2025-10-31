@@ -23,7 +23,12 @@ import { motion } from "framer-motion";
 
 const formSchema = z
   .object({
-    fullName: z.string().optional(),
+    fullName: z
+      .string()
+      .min(1, "Full name is required")
+      .min(2, "Full name must be at least 2 characters")
+      .max(50, "Full name must be less than 50 characters")
+      .regex(/^[a-zA-Z\s]+$/, "Full name can only contain letters and spaces"),
     email: z.string().email({ message: "Invalid email address." }),
     password: z
       .string()
@@ -31,6 +36,13 @@ const formSchema = z
     confirmPassword: z
       .string()
       .min(6, { message: "Password must be at least 6 characters." }),
+    phone: z
+      .string()
+      .optional()
+      .refine((val) => {
+        if (!val || val.trim() === "") return true; // Optional field
+        return /^\+?[\d\s\-\(\)]+$/.test(val) && val.replace(/\D/g, "").length >= 10;
+      }, "Please enter a valid phone number (at least 10 digits)"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match.",
@@ -50,6 +62,7 @@ export default function SignupPage() {
       email: "",
       password: "",
       confirmPassword: "",
+      phone: "",
     },
   });
 
@@ -59,6 +72,7 @@ export default function SignupPage() {
       email: values.email,
       password: values.password,
       fullName: values.fullName,
+      phone: values.phone || undefined,
     });
 
     if (error) {
@@ -118,7 +132,7 @@ export default function SignupPage() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <Label htmlFor="fullName" className="text-white">
-                Full Name (Optional)
+                Full Name *
               </Label>
               <Input
                 id="fullName"
@@ -127,10 +141,15 @@ export default function SignupPage() {
                 className="bg-white/10 border-white/20 text-white placeholder:text-nike-gray-400"
                 {...form.register("fullName")}
               />
+              {form.formState.errors.fullName && (
+                <p className="text-sm text-red-400">
+                  {form.formState.errors.fullName.message}
+                </p>
+              )}
             </div>
             <div>
               <Label htmlFor="email" className="text-white">
-                Email
+                Email *
               </Label>
               <Input
                 id="email"
@@ -146,8 +165,25 @@ export default function SignupPage() {
               )}
             </div>
             <div>
+              <Label htmlFor="phone" className="text-white">
+                Phone Number (Optional)
+              </Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="(555) 123-4567"
+                className="bg-white/10 border-white/20 text-white placeholder:text-nike-gray-400"
+                {...form.register("phone")}
+              />
+              {form.formState.errors.phone && (
+                <p className="text-sm text-red-400">
+                  {form.formState.errors.phone.message}
+                </p>
+              )}
+            </div>
+            <div>
               <Label htmlFor="password" className="text-white">
-                Password
+                Password *
               </Label>
               <Input
                 id="password"
@@ -163,7 +199,7 @@ export default function SignupPage() {
             </div>
             <div>
               <Label htmlFor="confirmPassword" className="text-white">
-                Confirm Password
+                Confirm Password *
               </Label>
               <Input
                 id="confirmPassword"

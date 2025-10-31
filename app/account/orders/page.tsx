@@ -1,62 +1,62 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Package, Truck, CheckCircle, XCircle, Clock, Eye } from 'lucide-react';
-import { Order } from '@/types';
-import Link from 'next/link';
-import Image from 'next/image';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Package, Truck, CheckCircle, XCircle, Clock, Eye } from "lucide-react";
+import { Order } from "@/types";
+import Link from "next/link";
+import Image from "next/image";
 
 const mockOrders: Order[] = [
   {
-    id: '1',
-    user_id: 'user-1',
-    order_number: 'ORD-2024-001',
-    status: 'delivered',
-    subtotal: 240.00,
-    tax: 19.20,
+    id: "1",
+    user_id: "user-1",
+    order_number: "ORD-2024-001",
+    status: "delivered",
+    subtotal: 240.0,
+    tax: 19.2,
     shipping: 0,
-    total: 259.20,
+    total: 259.2,
     shipping_address: {
-      id: 'addr-1',
-      user_id: 'user-1',
-      full_name: 'John Doe',
-      address_line1: '123 Main Street',
-      city: 'New York',
-      state: 'NY',
-      postal_code: '10001',
-      country: 'US',
-      phone: '(555) 123-4567',
-      is_default: true,
-      created_at: new Date().toISOString(),
+      id: "addr-1",
+      user_id: "user-1",
+      full_name: "John Doe",
+      address_line1: "123 Main Street",
+      city: "New York",
+      state: "NY",
+      postal_code: "10001",
+      country: "US",
+      phone: "(555) 123-4567",
     },
-    created_at: '2024-01-15T10:30:00Z',
-    updated_at: '2024-01-18T14:20:00Z',
+    created_at: "2024-01-15T10:30:00Z",
+    updated_at: "2024-01-18T14:20:00Z",
     order_items: [
       {
-        id: 'item-1',
-        order_id: '1',
-        product_id: 'prod-1',
+        id: "item-1",
+        order_id: "1",
+        product_id: "prod-1",
         quantity: 1,
-        size: '10',
-        color: 'Black',
-        price: 120.00,
-        created_at: '2024-01-15T10:30:00Z',
+        size: "10",
+        color: "Black",
+        price: 120.0,
+        created_at: "2024-01-15T10:30:00Z",
         product: {
-          id: 'prod-1',
-          name: 'Nike Air Max 270',
-          slug: 'nike-air-max-270',
-          description: 'Experience ultimate comfort',
-          price: 150.00,
-          sale_price: 120.00,
-          brand: 'Nike',
-          colors: ['Black', 'White', 'Red'],
-          sizes: ['7', '8', '9', '10', '11', '12'],
-          images: ['https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop'],
+          id: "prod-1",
+          name: "Nike Air Max 270",
+          slug: "nike-air-max-270",
+          description: "Experience ultimate comfort",
+          price: 150.0,
+          sale_price: 120.0,
+          brand: "Nike",
+          colors: ["Black", "White", "Red"],
+          sizes: ["7", "8", "9", "10", "11", "12"],
+          images: [
+            "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop",
+          ],
           stock: 25,
           is_featured: true,
           is_new: true,
@@ -67,24 +67,26 @@ const mockOrders: Order[] = [
         },
       },
       {
-        id: 'item-2',
-        order_id: '1',
-        product_id: 'prod-2',
+        id: "item-2",
+        order_id: "1",
+        product_id: "prod-2",
         quantity: 1,
-        size: '9',
-        color: 'White',
-        price: 120.00,
-        created_at: '2024-01-15T10:30:00Z',
+        size: "9",
+        color: "White",
+        price: 120.0,
+        created_at: "2024-01-15T10:30:00Z",
         product: {
-          id: 'prod-2',
-          name: 'Nike Air Force 1',
-          slug: 'nike-air-force-1',
-          description: 'The basketball original',
-          price: 90.00,
-          brand: 'Nike',
-          colors: ['White', 'Black'],
-          sizes: ['7', '8', '9', '10', '11', '12'],
-          images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop'],
+          id: "prod-2",
+          name: "Nike Air Force 1",
+          slug: "nike-air-force-1",
+          description: "The basketball original",
+          price: 90.0,
+          brand: "Nike",
+          colors: ["White", "Black"],
+          sizes: ["7", "8", "9", "10", "11", "12"],
+          images: [
+            "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop",
+          ],
           stock: 40,
           is_featured: true,
           is_new: false,
@@ -97,49 +99,49 @@ const mockOrders: Order[] = [
     ],
   },
   {
-    id: '2',
-    user_id: 'user-1',
-    order_number: 'ORD-2024-002',
-    status: 'processing',
-    subtotal: 150.00,
-    tax: 12.00,
-    shipping: 15.00,
-    total: 177.00,
+    id: "2",
+    user_id: "user-1",
+    order_number: "ORD-2024-002",
+    status: "processing",
+    subtotal: 150.0,
+    tax: 12.0,
+    shipping: 15.0,
+    total: 177.0,
     shipping_address: {
-      id: 'addr-1',
-      user_id: 'user-1',
-      full_name: 'John Doe',
-      address_line1: '123 Main Street',
-      city: 'New York',
-      state: 'NY',
-      postal_code: '10001',
-      country: 'US',
-      phone: '(555) 123-4567',
-      is_default: true,
-      created_at: new Date().toISOString(),
+      id: "addr-1",
+      user_id: "user-1",
+      full_name: "John Doe",
+      address_line1: "123 Main Street",
+      city: "New York",
+      state: "NY",
+      postal_code: "10001",
+      country: "US",
+      phone: "(555) 123-4567",
     },
-    created_at: '2024-01-20T09:15:00Z',
-    updated_at: '2024-01-20T09:15:00Z',
+    created_at: "2024-01-20T09:15:00Z",
+    updated_at: "2024-01-20T09:15:00Z",
     order_items: [
       {
-        id: 'item-3',
-        order_id: '2',
-        product_id: 'prod-3',
+        id: "item-3",
+        order_id: "2",
+        product_id: "prod-3",
         quantity: 1,
-        size: '11',
-        color: 'Blue',
-        price: 150.00,
-        created_at: '2024-01-20T09:15:00Z',
+        size: "11",
+        color: "Blue",
+        price: 150.0,
+        created_at: "2024-01-20T09:15:00Z",
         product: {
-          id: 'prod-3',
-          name: 'Adidas Ultraboost 22',
-          slug: 'adidas-ultraboost-22',
-          description: 'Incredible energy return',
-          price: 190.00,
-          brand: 'Adidas',
-          colors: ['White', 'Black', 'Blue'],
-          sizes: ['6', '7', '8', '9', '10', '11'],
-          images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop'],
+          id: "prod-3",
+          name: "Adidas Ultraboost 22",
+          slug: "adidas-ultraboost-22",
+          description: "Incredible energy return",
+          price: 190.0,
+          brand: "Adidas",
+          colors: ["White", "Black", "Blue"],
+          sizes: ["6", "7", "8", "9", "10", "11"],
+          images: [
+            "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop",
+          ],
           stock: 35,
           is_featured: true,
           is_new: false,
@@ -154,11 +156,31 @@ const mockOrders: Order[] = [
 ];
 
 const statusConfig = {
-  pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-  processing: { label: 'Processing', color: 'bg-blue-100 text-blue-800', icon: Package },
-  shipped: { label: 'Shipped', color: 'bg-purple-100 text-purple-800', icon: Truck },
-  delivered: { label: 'Delivered', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-  cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800', icon: XCircle },
+  pending: {
+    label: "Pending",
+    color: "bg-yellow-100 text-yellow-800",
+    icon: Clock,
+  },
+  processing: {
+    label: "Processing",
+    color: "bg-blue-100 text-blue-800",
+    icon: Package,
+  },
+  shipped: {
+    label: "Shipped",
+    color: "bg-purple-100 text-purple-800",
+    icon: Truck,
+  },
+  delivered: {
+    label: "Delivered",
+    color: "bg-green-100 text-green-800",
+    icon: CheckCircle,
+  },
+  cancelled: {
+    label: "Cancelled",
+    color: "bg-red-100 text-red-800",
+    icon: XCircle,
+  },
 };
 
 export default function OrdersPage() {
@@ -198,9 +220,12 @@ export default function OrdersPage() {
           <Card>
             <CardContent className="text-center py-12">
               <Package className="h-16 w-16 text-nike-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-nike-gray-900 mb-2">No orders yet</h3>
+              <h3 className="text-lg font-semibold text-nike-gray-900 mb-2">
+                No orders yet
+              </h3>
               <p className="text-nike-gray-600 mb-6">
-                You haven&apos;t placed any orders yet. Start shopping to see your orders here.
+                You haven&apos;t placed any orders yet. Start shopping to see
+                your orders here.
               </p>
               <Button asChild className="btn-nike-primary">
                 <Link href="/products">Start Shopping</Link>
@@ -224,9 +249,12 @@ export default function OrdersPage() {
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <div>
-                          <CardTitle className="text-lg">Order #{order.order_number}</CardTitle>
+                          <CardTitle className="text-lg">
+                            Order #{order.order_number}
+                          </CardTitle>
                           <p className="text-sm text-nike-gray-600">
-                            Placed on {new Date(order.created_at).toLocaleDateString()}
+                            Placed on{" "}
+                            {new Date(order.created_at).toLocaleDateString()}
                           </p>
                         </div>
                         <div className="flex items-center space-x-4">
@@ -248,7 +276,10 @@ export default function OrdersPage() {
                         {/* Order Items */}
                         <div className="space-y-3">
                           {order.order_items?.map((item) => (
-                            <div key={item.id} className="flex items-center space-x-4">
+                            <div
+                              key={item.id}
+                              className="flex items-center space-x-4"
+                            >
                               <div className="w-16 h-16 relative rounded-lg overflow-hidden bg-nike-gray-100">
                                 {item.product?.images?.[0] && (
                                   <Image
@@ -265,7 +296,8 @@ export default function OrdersPage() {
                                   {item.product?.name}
                                 </h4>
                                 <p className="text-sm text-nike-gray-600">
-                                  Size: {item.size} • Color: {item.color} • Qty: {item.quantity}
+                                  Size: {item.size} • Color: {item.color} • Qty:{" "}
+                                  {item.quantity}
                                 </p>
                                 <p className="text-sm font-semibold text-nike-gray-900">
                                   ${item.price.toFixed(2)}
@@ -280,7 +312,8 @@ export default function OrdersPage() {
                         {/* Order Summary */}
                         <div className="flex justify-between items-center">
                           <div className="text-sm text-nike-gray-600">
-                            {order.order_items?.length} item{order.order_items?.length !== 1 ? 's' : ''}
+                            {order.order_items?.length} item
+                            {order.order_items?.length !== 1 ? "s" : ""}
                           </div>
                           <div className="text-right">
                             <div className="text-lg font-semibold text-nike-gray-900">
@@ -298,9 +331,13 @@ export default function OrdersPage() {
                         <div className="text-sm text-nike-gray-600">
                           <p className="font-medium">Shipping to:</p>
                           <p>
-                            {order.shipping_address.full_name}<br />
-                            {order.shipping_address.address_line1}<br />
-                            {order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.postal_code}
+                            {order.shipping_address.full_name}
+                            <br />
+                            {order.shipping_address.address_line1}
+                            <br />
+                            {order.shipping_address.city},{" "}
+                            {order.shipping_address.state}{" "}
+                            {order.shipping_address.postal_code}
                           </p>
                         </div>
                       </div>

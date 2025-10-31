@@ -39,9 +39,10 @@ class Analytics {
 
   constructor() {
     this.isEnabled = typeof window !== 'undefined' && !!window.gtag;
-    
+
     if (this.isEnabled && typeof window !== 'undefined') {
-      this.gtag = window.gtag;
+      this.gtag = window.gtag ?? null;
+
     }
   }
 

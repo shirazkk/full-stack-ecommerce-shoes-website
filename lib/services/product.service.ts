@@ -26,7 +26,7 @@ export interface ProductSearchResult {
 export class ProductService {
   static async getAllProducts(filters: ProductFilters = {}): Promise<ProductSearchResult> {
     const supabase = await createClient();
-    
+
     let query = supabase
       .from('products')
       .select(`
@@ -48,7 +48,7 @@ export class ProductService {
         .select('id')
         .eq('slug', filters.category)
         .single();
-      
+
       if (category) {
         query = query.eq('category_id', category.id);
       }
@@ -111,7 +111,7 @@ export class ProductService {
 
   static async getProductBySlug(slug: string): Promise<Product> {
     const supabase = await createClient();
-    
+
     const { data, error } = await supabase
       .from('products')
       .select(`
@@ -136,7 +136,7 @@ export class ProductService {
 
   static async getFeaturedProducts(limit: number = 8): Promise<Product[]> {
     const supabase = await createClient();
-    
+
     const { data, error } = await supabase
       .from('products')
       .select(`
@@ -162,7 +162,7 @@ export class ProductService {
 
   static async getNewArrivals(limit: number = 8): Promise<Product[]> {
     const supabase = await createClient();
-    
+
     const { data, error } = await supabase
       .from('products')
       .select(`
@@ -188,7 +188,7 @@ export class ProductService {
 
   static async searchProducts(query: string, limit: number = 12): Promise<Product[]> {
     const supabase = await createClient();
-    
+
     const { data, error } = await supabase
       .from('products')
       .select(`
@@ -214,7 +214,7 @@ export class ProductService {
 
   static async getRelatedProducts(productId: string, categoryId: string, limit: number = 4): Promise<Product[]> {
     const supabase = await createClient();
-    
+
     const { data, error } = await supabase
       .from('products')
       .select(`
@@ -241,7 +241,7 @@ export class ProductService {
 
   static async getCategories(): Promise<Category[]> {
     const supabase = await createClient();
-    
+
     const { data, error } = await supabase
       .from('categories')
       .select('*')
@@ -256,7 +256,7 @@ export class ProductService {
 
   static async getBrands(): Promise<string[]> {
     const supabase = await createClient();
-    
+
     const { data, error } = await supabase
       .from('products')
       .select('brand')
@@ -274,7 +274,7 @@ export class ProductService {
 
   static async createProduct(product: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product> {
     const supabase = await createClient();
-    
+
     const { data, error } = await supabase
       .from('products')
       .insert([product])
@@ -299,7 +299,7 @@ export class ProductService {
 
   static async updateProduct(id: string, updates: Partial<Product>): Promise<Product> {
     const supabase = await createClient();
-    
+
     const { data, error } = await supabase
       .from('products')
       .update(updates)
@@ -325,7 +325,7 @@ export class ProductService {
 
   static async deleteProduct(id: string): Promise<boolean> {
     const supabase = await createClient();
-    
+
     const { error } = await supabase
       .from('products')
       .delete()

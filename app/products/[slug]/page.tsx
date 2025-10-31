@@ -1,31 +1,46 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Heart, ShoppingCart, Star, Truck, Shield, RefreshCw, ArrowLeft, Plus, Minus } from 'lucide-react';
-import { Product } from '@/types';
-import { useToast } from '@/hooks/use-toast';
-import { useCart } from '@/hooks/use-cart';
-import { useWishlist } from '@/hooks/use-wishlist';
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Heart,
+  ShoppingCart,
+  Star,
+  Truck,
+  Shield,
+  RefreshCw,
+  ArrowLeft,
+  Plus,
+  Minus,
+} from "lucide-react";
+import { Product } from "@/types";
+import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/hooks/use-cart";
+import { useWishlist } from "@/hooks/use-wishlist";
+import { ProductCard } from "@/components/product-card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProductDetailPage() {
   const params = useParams();
   const { toast } = useToast();
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [relatedLoading, setRelatedLoading] = useState(false);
   const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedSize, setSelectedSize] = useState('');
-  const [selectedColor, setSelectedColor] = useState('');
+  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
   // Fetch product data from API
   useEffect(() => {
@@ -33,59 +48,89 @@ export default function ProductDetailPage() {
       try {
         setLoading(true);
         const response = await fetch(`/api/products/${params.slug}`);
-        
+
         if (!response.ok) {
           if (response.status === 404) {
             setProduct(null);
             return;
           }
-          throw new Error('Failed to fetch product');
+          throw new Error("Failed to fetch product");
         }
-        
+
         const data = await response.json();
         const productData = data.product;
-        
+
         if (productData) {
           setProduct(productData);
-          setSelectedColor(productData.colors?.[0] || 'Black');
-          setSelectedSize(productData.sizes?.[0] || 'M');
+          setSelectedColor(productData.colors?.[0] || "Black");
+          setSelectedSize(productData.sizes?.[0] || "M");
         } else {
           setProduct(null);
         }
       } catch (error) {
-        console.error('Error fetching product:', error);
+        console.error("Error fetching product:", error);
         toast({
-          title: 'Error',
-          description: 'Failed to load product. Please try again.',
-          variant: 'destructive',
+          title: "Error",
+          description: "Failed to load product. Please try again.",
+          variant: "destructive",
         });
         setProduct(null);
       } finally {
         setLoading(false);
+        setIsInitialLoading(false);
       }
     };
-
     if (params.slug) {
       fetchProduct();
     }
   }, [params.slug, toast]);
 
+  // Fetch related products
+  useEffect(() => {
+    const fetchRelatedProducts = async () => {
+      if (!product) return;
+
+      try {
+        setRelatedLoading(true);
+        const response = await fetch(
+          `/api/relatedproducts?productId=${product.id}&categoryId=${product.category_id}&limit=4`
+        );
+
+        if (!response.ok) {
+          setError("Failed to fetch related products");
+          return;
+        }
+
+        const data = await response.json();
+        setRelatedProducts(data.products);
+      } catch (error) {
+        console.error("Error fetching related products:", error);
+        setError("Failed to fetch related products");
+      } finally {
+        setRelatedLoading(false);
+      }
+    };
+
+    fetchRelatedProducts();
+  }, [product]);
+
   const handleAddToCart = async () => {
     if (!product || !selectedSize || !selectedColor) {
       toast({
-        title: 'Please select size and color',
-        description: 'Choose your preferred size and color before adding to cart.',
-        variant: 'destructive',
+        title: "Please select size and color",
+        description:
+          "Choose your preferred size and color before adding to cart.",
+        variant: "destructive",
       });
       return;
     }
 
     setIsAddingToCart(true);
-    
+
     try {
       await addToCart(product, quantity, selectedSize, selectedColor);
     } catch (error) {
-      console.error('Error adding to cart:', error);
+      console.error("Error adding to cart:", error);
     } finally {
       setIsAddingToCart(false);
     }
@@ -95,7 +140,7 @@ export default function ProductDetailPage() {
     if (!product) return;
 
     const isWishlisted = isInWishlist(product.id);
-    
+
     if (isWishlisted) {
       await removeFromWishlist(product.id);
     } else {
@@ -103,7 +148,7 @@ export default function ProductDetailPage() {
     }
   };
 
-  if (loading) {
+  if (isInitialLoading || loading) {
     return (
       <div className="min-h-screen bg-nike-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-nike-orange-500"></div>
@@ -111,11 +156,13 @@ export default function ProductDetailPage() {
     );
   }
 
-  if (!product) {
+  if (!isInitialLoading && !product) {
     return (
       <div className="min-h-screen bg-nike-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-nike-gray-900 mb-4">Product Not Found</h1>
+          <h1 className="text-2xl font-bold text-nike-gray-900 mb-4">
+            Product Not Found
+          </h1>
           <Link href="/products" className="btn-nike-primary">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Products
@@ -130,11 +177,15 @@ export default function ProductDetailPage() {
       {/* Breadcrumb */}
       <div className="container-nike py-4">
         <nav className="flex items-center space-x-2 text-sm text-nike-gray-600">
-          <Link href="/" className="hover:text-nike-orange-500">Home</Link>
+          <Link href="/" className="hover:text-nike-orange-500">
+            Home
+          </Link>
           <span>/</span>
-          <Link href="/products" className="hover:text-nike-orange-500">Products</Link>
+          <Link href="/products" className="hover:text-nike-orange-500">
+            Products
+          </Link>
           <span>/</span>
-          <span className="text-nike-gray-900">{product.name}</span>
+          <span className="text-nike-gray-900">{product?.name}</span>
         </nav>
       </div>
 
@@ -150,18 +201,18 @@ export default function ProductDetailPage() {
               className="aspect-square relative overflow-hidden rounded-2xl bg-white"
             >
               <Image
-                src={product.images[selectedImage]}
-                alt={product.name}
+                src={product?.images[selectedImage] || "/placeholder.png"}
+                alt={product?.name || "Product Image"}
                 fill
                 className="object-cover"
                 priority
               />
-              {product.is_new && (
+              {product?.is_new && (
                 <Badge className="absolute top-4 left-4 bg-nike-orange-500 text-white">
                   New
                 </Badge>
               )}
-              {product.sale_price && (
+              {product?.sale_price && (
                 <Badge className="absolute top-4 right-4 bg-red-500 text-white">
                   Sale
                 </Badge>
@@ -170,7 +221,7 @@ export default function ProductDetailPage() {
 
             {/* Thumbnail Images */}
             <div className="grid grid-cols-4 gap-2">
-              {product.images.map((image, index) => (
+              {product?.images.map((image, index) => (
                 <motion.button
                   key={index}
                   whileHover={{ scale: 1.05 }}
@@ -178,8 +229,8 @@ export default function ProductDetailPage() {
                   onClick={() => setSelectedImage(index)}
                   className={`aspect-square relative overflow-hidden rounded-lg border-2 transition-all ${
                     selectedImage === index
-                      ? 'border-nike-orange-500'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? "border-nike-orange-500"
+                      : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
                   <Image
@@ -202,20 +253,26 @@ export default function ProductDetailPage() {
             >
               <div className="flex items-center justify-between mb-4">
                 <h1 className="text-nike-display text-3xl font-bold text-nike-gray-900">
-                  {product.name}
+                  {product?.name}
                 </h1>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleWishlistToggle}
-                  className={`transition-colors ${
-                    isInWishlist(product.id)
-                      ? 'text-red-500 hover:text-red-600'
-                      : 'text-nike-gray-400 hover:text-red-500'
-                  }`}
-                >
-                  <Heart className={`h-6 w-6 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
-                </Button>
+                {product?.id && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleWishlistToggle}
+                    className={`transition-colors ${
+                      isInWishlist(product?.id)
+                        ? "text-red-500 hover:text-red-600"
+                        : "text-nike-gray-400 hover:text-red-500"
+                    }`}
+                  >
+                    <Heart
+                      className={`h-6 w-6 ${
+                        isInWishlist(product?.id) ? "fill-current" : ""
+                      }`}
+                    />
+                  </Button>
+                )}
               </div>
 
               <div className="flex items-center space-x-4 mb-4">
@@ -224,20 +281,20 @@ export default function ProductDetailPage() {
                     <Star
                       key={i}
                       className={`h-4 w-4 ${
-                        i < Math.floor(product.rating)
-                          ? 'text-yellow-400 fill-current'
-                          : 'text-gray-300'
+                        i < Math.floor(product?.rating || 0)
+                          ? "text-yellow-400 fill-current"
+                          : "text-gray-300"
                       }`}
                     />
                   ))}
                   <span className="text-sm text-nike-gray-600 ml-2">
-                    {product.rating} ({product.reviews_count} reviews)
+                    {product?.rating} ({product?.reviews_count} reviews)
                   </span>
                 </div>
               </div>
 
               <div className="flex items-center space-x-4 mb-6">
-                {product.sale_price ? (
+                {product?.sale_price ? (
                   <div className="flex items-center space-x-2">
                     <span className="text-3xl font-bold text-nike-gray-900">
                       ${product.sale_price}
@@ -246,18 +303,22 @@ export default function ProductDetailPage() {
                       ${product.price}
                     </span>
                     <Badge className="bg-red-500 text-white">
-                      {Math.round(((product.price - product.sale_price) / product.price) * 100)}% OFF
+                      {Math.round(
+                        ((product.price - product.sale_price) / product.price) *
+                          100
+                      )}
+                      % OFF
                     </Badge>
                   </div>
                 ) : (
                   <span className="text-3xl font-bold text-nike-gray-900">
-                    ${product.price}
+                    ${product?.price}
                   </span>
                 )}
               </div>
 
               <p className="text-nike-body text-nike-gray-700 leading-relaxed">
-                {product.description}
+                {product?.description}
               </p>
             </motion.div>
 
@@ -269,17 +330,19 @@ export default function ProductDetailPage() {
             >
               {/* Color Selection */}
               <div>
-                <h3 className="text-lg font-semibold text-nike-gray-900 mb-3">Color</h3>
+                <h3 className="text-lg font-semibold text-nike-gray-900 mb-3">
+                  Color
+                </h3>
                 <div className="flex flex-wrap gap-3">
-                  {product.colors.map((color) => (
+                  {product?.colors.map((color) => (
                     <Button
                       key={color}
-                      variant={selectedColor === color ? 'default' : 'outline'}
+                      variant={selectedColor === color ? "default" : "outline"}
                       onClick={() => setSelectedColor(color)}
                       className={`transition-all ${
                         selectedColor === color
-                          ? 'bg-nike-orange-500 text-white'
-                          : 'border-nike-gray-300 text-nike-gray-700 hover:border-nike-orange-500'
+                          ? "bg-nike-orange-500 text-white"
+                          : "border-nike-gray-300 text-nike-gray-700 hover:border-nike-orange-500"
                       }`}
                     >
                       {color}
@@ -290,17 +353,19 @@ export default function ProductDetailPage() {
 
               {/* Size Selection */}
               <div>
-                <h3 className="text-lg font-semibold text-nike-gray-900 mb-3">Size</h3>
+                <h3 className="text-lg font-semibold text-nike-gray-900 mb-3">
+                  Size
+                </h3>
                 <div className="grid grid-cols-6 gap-2">
-                  {product.sizes.map((size) => (
+                  {product?.sizes.map((size) => (
                     <Button
                       key={size}
-                      variant={selectedSize === size ? 'default' : 'outline'}
+                      variant={selectedSize === size ? "default" : "outline"}
                       onClick={() => setSelectedSize(size)}
                       className={`transition-all ${
                         selectedSize === size
-                          ? 'bg-nike-orange-500 text-white'
-                          : 'border-nike-gray-300 text-nike-gray-700 hover:border-nike-orange-500'
+                          ? "bg-nike-orange-500 text-white"
+                          : "border-nike-gray-300 text-nike-gray-700 hover:border-nike-orange-500"
                       }`}
                     >
                       {size}
@@ -311,7 +376,9 @@ export default function ProductDetailPage() {
 
               {/* Quantity */}
               <div>
-                <h3 className="text-lg font-semibold text-nike-gray-900 mb-3">Quantity</h3>
+                <h3 className="text-lg font-semibold text-nike-gray-900 mb-3">
+                  Quantity
+                </h3>
                 <div className="flex items-center space-x-3">
                   <Button
                     variant="outline"
@@ -321,18 +388,21 @@ export default function ProductDetailPage() {
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
-                  <span className="text-lg font-semibold w-8 text-center">{quantity}</span>
+                  <span className="text-lg font-semibold w-8 text-center">
+                    {quantity}
+                  </span>
                   <Button
                     variant="outline"
                     size="icon"
                     onClick={() => setQuantity(quantity + 1)}
-                    disabled={quantity >= product.stock}
+                    disabled={quantity >= (product?.stock ?? 0)}
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
                 <p className="text-sm text-nike-gray-600 mt-2">
-                  {product.stock} in stock
+                  {product?.stock} {product?.stock === 1 ? "item" : "items"} in
+                  stock
                 </p>
               </div>
 
@@ -350,7 +420,7 @@ export default function ProductDetailPage() {
                 ) : (
                   <>
                     <ShoppingCart className="h-5 w-5 mr-2" />
-                    Add to Cart - ${product.sale_price || product.price}
+                    Add to Cart - ${product?.sale_price || product?.price}
                   </>
                 )}
               </Button>
@@ -381,25 +451,47 @@ export default function ProductDetailPage() {
           transition={{ duration: 0.5, delay: 0.6 }}
           className="mt-16"
         >
-          <h2 className="text-2xl font-bold text-nike-gray-900 mb-8">You Might Also Like</h2>
+          <h2 className="text-2xl font-bold text-nike-gray-900 mb-8">
+            You Might Also Like
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Mock related products */}
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow">
-                <div className="aspect-square relative">
-                  <Image
-                    src={`https://images.unsplash.com/photo-${1549298916 + i}-b41d501d3772?w=400&h=400&fit=crop`}
-                    alt={`Related product ${i}`}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-nike-gray-900 mb-2">Related Product {i}</h3>
-                  <p className="text-nike-orange-500 font-bold">$120.00</p>
-                </div>
+            {relatedLoading ? (
+              // Loading skeletons
+              Array.from({ length: 4 }).map((_, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  className="group"
+                >
+                  <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <Skeleton className="h-64 w-full" />
+                    <div className="p-6 space-y-3">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                      <Skeleton className="h-6 w-1/3" />
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            ) : error ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-red-600 mb-4">{error}</p>
+                <Button onClick={() => window.location.reload()}>
+                  Try Again
+                </Button>
               </div>
-            ))}
+            ) : relatedProducts.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-600">No Related products available</p>
+              </div>
+            ) : (
+              relatedProducts.map((relatedProduct) => (
+                <ProductCard key={relatedProduct.id} product={relatedProduct} />
+              ))
+            )}
           </div>
         </motion.div>
       </div>

@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     try {
       const supabase = await createClient();
       const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-      
+
       if (exchangeError) {
         console.error('Error exchanging code for session:', exchangeError);
         return NextResponse.redirect(`${requestUrl.origin}/login?error=callback_failed`);
