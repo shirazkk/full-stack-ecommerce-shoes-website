@@ -26,11 +26,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import SearchProducts from "@/components/SearchProducts";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileAccountOpen, setMobileAccountOpen] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { cartCount } = useCart();
@@ -113,7 +113,7 @@ export function Header() {
           <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
             {navLinks.map((link) => (
               <motion.div
-                key={link.label}
+                key={link.href}
                 whileHover={{ y: -2 }}
                 transition={{ duration: 0.2 }}
               >
@@ -130,28 +130,7 @@ export function Header() {
 
           {/* Search Bar */}
           <div className="hidden md:flex flex-1 max-w-xs lg:max-w-md mx-2 lg:mx-4">
-            <motion.div
-              className="relative w-full"
-              animate={{ scale: searchFocused ? 1.02 : 1 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Search
-                className={`absolute left-3 lg:left-4 top-1/2 h-4 w-4 -translate-y-1/2 transition-colors ${
-                  searchFocused ? "text-orange-500" : "text-gray-400"
-                }`}
-              />
-              <Input
-                type="search"
-                placeholder="Search"
-                className={`w-full pl-9 lg:pl-12 pr-4 py-2 text-sm bg-gray-50 border rounded-full outline-none transition-all ${
-                  searchFocused
-                    ? "border-orange-500 bg-white shadow-md ring-2 ring-orange-100"
-                    : "border-transparent hover:bg-gray-100"
-                }`}
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
-              />
-            </motion.div>
+            <SearchProducts />
           </div>
 
           {/* Action Buttons */}
@@ -269,7 +248,10 @@ export function Header() {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild className="cursor-pointer">
-                        <Link href="/account/orders" className="flex items-center">
+                        <Link
+                          href="/account/orders"
+                          className="flex items-center"
+                        >
                           Order History
                         </Link>
                       </DropdownMenuItem>

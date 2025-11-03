@@ -22,7 +22,7 @@ import { Address } from "@/types";
 // Import the new components
 import ShippingInfo from "@/components/ShippingInfo";
 import ShippingMethod from "@/components/ShippingMethod";
-import PaymentInfo from "@/components/PaymentInfo";
+import StripePaymentFlow from "@/components/StripePayment";
 import CheckoutLoading from "./loading";
 
 export default function CheckoutPage() {
@@ -31,6 +31,10 @@ export default function CheckoutPage() {
   const { cartItems, initialized, clearCart } = useCart();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [orderData, setOrderData] = useState<{
+    orderId: string;
+    amount: number;
+  } | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string[]>>({});
   const [form, setForm] = useState<CheckoutFormData>({
     email: "",
@@ -50,7 +54,7 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
-    if (!initialized) return; // wait until cart is loaded at least once
+    if (!initialized) return;
 
     if (cartItems.length === 0 && !loading) {
       toast({
@@ -73,7 +77,7 @@ export default function CheckoutPage() {
       : form.shippingMethod === "overnight"
       ? 25
       : 0;
-  const tax = +(subtotal * 0.08).toFixed(2); // 8% tax
+  const tax = +(subtotal * 0.08).toFixed(2);
   const total = +(subtotal + shipping + tax).toFixed(2);
 
   const handleInputChange = (
@@ -82,7 +86,6 @@ export default function CheckoutPage() {
   ) => {
     setForm((prev) => ({ ...prev, [field]: value }));
 
-    // Clear error for this field when user starts typing
     if (formErrors[field]) {
       setFormErrors((prev) => {
         const newErrors = { ...prev };
@@ -104,7 +107,7 @@ export default function CheckoutPage() {
 
   const sanitizeForm = (): CheckoutFormData => sanitizeCheckoutForm(form);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep === 1) {
       if (!validateForm()) {
         toast({
@@ -115,13 +118,18 @@ export default function CheckoutPage() {
         return;
       }
     }
-    setCurrentStep((prev) => Math.min(3, prev + 1));
+
+    // When moving from step 2 to step 3, create the order
+    if (currentStep === 2) {
+      await createOrder();
+    } else {
+      setCurrentStep((prev) => Math.min(3, prev + 1));
+    }
   };
 
   const handleBack = () => setCurrentStep((prev) => Math.max(1, prev - 1));
 
-  const handleSubmit = async () => {
-    // Final validation before submission
+  const createOrder = async () => {
     if (!validateForm()) {
       toast({
         title: "Please fix the errors below",
@@ -136,23 +144,20 @@ export default function CheckoutPage() {
     try {
       const sanitizedData = sanitizeForm();
 
-      // Build order items payload
       const orderItems = cartItems.map((item) => ({
-        product_id: item.product_id ?? item.product?.id, // prefer product_id, fallback to product.id
+        product_id: item.product_id ?? item.product?.id,
         quantity: item.quantity,
         size: item.size,
         color: item.color,
         price: item.product?.sale_price ?? item.product?.price ?? 0,
       }));
 
-      // Basic validation: ensure product ids exist
       for (const it of orderItems) {
         if (!it.product_id) {
           throw new Error("One of the cart items is missing a product id.");
         }
       }
 
-      // Build shipping address payload (matches your backend Address structure)
       const shippingAddress = {
         full_name:
           `${sanitizedData.firstName} ${sanitizedData.lastName}`.trim(),
@@ -165,7 +170,7 @@ export default function CheckoutPage() {
         phone: sanitizedData.phone,
       };
 
-      // Call your API
+      // Create order with status "pending_payment"
       const resp = await axios.post("/api/orders", {
         items: orderItems,
         shippingAddress,
@@ -173,38 +178,30 @@ export default function CheckoutPage() {
         tax,
         shipping,
         total,
-        // stripePaymentIntentId: optional - will be created on server if you integrate payments
       });
 
       if (resp.status === 201) {
-        toast({
-          title: "Order Placed Successfully!",
-          description:
-            "Thank you for your purchase. You will receive a confirmation email shortly.",
-        });
+        const { orderId, total } = resp.data;
+        setOrderData({ orderId, amount: total });
+
+        // Save address if requested
         if (form.saveInfo === true) {
           try {
             await insertAddress(shippingAddress as Address);
           } catch (err: any) {
-            toast({
-              title: "Failed to Save Address",
-              description: err.message,
-            });
             console.error("Error saving address:", err.message);
           }
         }
-        // Redirect user to orders page
-        router.push("/account/orders");
-        // Clear cart
-        await clearCart();
+
+        // Move to payment step
+        setCurrentStep(3);
       } else {
-        // unexpected status
         throw new Error(resp.data?.error || "Failed to create order");
       }
     } catch (err: any) {
       console.error("Checkout error:", err);
       toast({
-        title: "Order Failed",
+        title: "Order Creation Failed",
         description:
           err?.response?.data?.error || err.message || "Something went wrong",
         variant: "destructive",
@@ -214,7 +211,38 @@ export default function CheckoutPage() {
     }
   };
 
-  // Show loading state while cart is being fetched
+  // This function is called after successful payment
+  const handlePaymentSuccess = async (paymentIntentId: string) => {
+    try {
+      // // we have to use supabase serivce key to update order status
+
+      // await axios.patch(`/api/orders/${orderData?.orderId}`, {
+      //   status: "processing",
+      //   paymentIntentId,
+      // });
+
+      // Update order status to "paid"
+      toast({
+        title: "Order Placed Successfully!",
+        description:
+          "Thank you for your purchase. You will receive a confirmation email shortly.",
+      });
+
+      // Redirect to orders page
+      router.push("/account/orders");
+
+      // Clear cart
+      await clearCart();
+    } catch (err: any) {
+      console.error("Error updating order:", err);
+      toast({
+        title: "Payment processed but order update failed",
+        description: "Please contact support with your order ID.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!initialized) {
     return <CheckoutLoading />;
   }
@@ -222,7 +250,6 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-nike-gray-50">
       <div className="container-nike py-8">
-        {/* Header */}
         <div className="mb-8">
           <Button
             variant="ghost"
@@ -238,7 +265,6 @@ export default function CheckoutPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
           <div className="lg:col-span-2">
             {/* Progress Steps */}
             <div className="flex items-center justify-between mb-8">
@@ -281,27 +307,26 @@ export default function CheckoutPage() {
             )}
 
             {/* Step 3: Payment */}
-            {currentStep === 3 && (
-              <PaymentInfo form={form} onInputChange={handleInputChange} />
+            {currentStep === 3 && orderData && (
+              <StripePaymentFlow
+                orderData={orderData}
+                onPaymentSuccess={handlePaymentSuccess}
+              />
             )}
 
-            {/* Navigation Buttons */}
-            <div className="flex justify-between mt-8">
-              <Button
-                variant="outline"
-                onClick={handleBack}
-                disabled={currentStep === 1}
-              >
-                Back
-              </Button>
-
-              {currentStep < 3 ? (
-                <Button onClick={handleNext} className="btn-nike-primary">
-                  Continue
-                </Button>
-              ) : (
+            {/* Navigation Buttons - Only show for steps 1 and 2 */}
+            {currentStep < 3 && (
+              <div className="flex justify-between mt-8">
                 <Button
-                  onClick={handleSubmit}
+                  variant="outline"
+                  onClick={handleBack}
+                  disabled={currentStep === 1}
+                >
+                  Back
+                </Button>
+
+                <Button
+                  onClick={handleNext}
                   disabled={loading}
                   className="btn-nike-primary"
                 >
@@ -311,11 +336,11 @@ export default function CheckoutPage() {
                       Processing...
                     </>
                   ) : (
-                    "Complete Order"
+                    "Continue"
                   )}
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Order Summary */}

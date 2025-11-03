@@ -25,11 +25,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getUser, signOut } from "@/lib/auth/client";
 import { createClient } from "@/lib/supabase/client";
+import ProfileInfo from "@/components/membersince";
 
 export default function AccountSettingsPage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [memberSince, setMemberSince] = useState<string>("");
   const { toast } = useToast();
   const router = useRouter();
 
@@ -155,12 +157,12 @@ export default function AccountSettingsPage() {
       setSaving(true);
       const supabase = createClient();
 
-      console.log("Updating profile with:", {
-        full_name: fullName,
-        phone: phone,
-        avatar_url: avatarUrl,
-        user_id: user.id
-      });
+      // console.log("Updating profile with:", {
+      //   full_name: fullName,
+      //   phone: phone,
+      //   avatar_url: avatarUrl,
+      //   user_id: user.id,
+      // });
 
       // First, ensure the profile exists in the profiles table
       const { data: existingProfile } = await supabase
@@ -171,16 +173,14 @@ export default function AccountSettingsPage() {
 
       if (!existingProfile) {
         // Create profile if it doesn't exist (for OAuth users)
-        const { error: createError } = await supabase
-          .from("profiles")
-          .insert({
-            id: user.id,
-            email: user.email,
-            full_name: fullName,
-            phone: phone,
-            avatar_url: avatarUrl,
-            role: 'user'
-          });
+        const { error: createError } = await supabase.from("profiles").insert({
+          id: user.id,
+          email: user.email,
+          full_name: fullName,
+          phone: phone,
+          avatar_url: avatarUrl,
+          role: "user",
+        });
 
         if (createError) {
           console.error("Error creating profile:", createError);
@@ -211,7 +211,7 @@ export default function AccountSettingsPage() {
         data: {
           full_name: fullName,
           avatar_url: avatarUrl,
-        }
+        },
       });
 
       if (authError) {
@@ -280,6 +280,39 @@ export default function AccountSettingsPage() {
       setSaving(false);
     }
   };
+
+  const fetchMemberSince = async () => {
+    const supabase = createClient();
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("created_at")
+      .eq("id", user.id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching created_at:", error);
+      setMemberSince("N/A");
+      return;
+    }
+
+    if (data?.created_at) {
+      const formattedDate = new Date(data.created_at).toLocaleDateString(
+        undefined,
+        {
+          year: "numeric",
+          month: "long",
+        }
+      );
+      setMemberSince(formattedDate);
+    }
+  };
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchMemberSince();
+    }
+  }, [user]);
 
   if (loading) {
     return (
@@ -535,7 +568,7 @@ export default function AccountSettingsPage() {
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Member since</span>
                     <span className="text-sm font-medium">
-                      {new Date(user.created_at).toLocaleDateString()}
+                      {memberSince || "N/A"}
                     </span>
                   </div>
                 </div>

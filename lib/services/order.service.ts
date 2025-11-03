@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { Order, OrderItem, Address } from '@/types';
+import { supabaseAdmin } from '../supabase/subabaseadmin';
 
 export async function createOrder(
   userId: string,
@@ -35,7 +36,7 @@ export async function createOrder(
       .insert({
         user_id: userId,
         order_number: orderNumber,
-        status: 'pending',
+        status: "pending",
         subtotal,
         tax,
         shipping,
@@ -146,14 +147,16 @@ export async function getUserOrders(
 
 export async function updateOrderStatus(
   orderId: string,
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled',
+  paymentIntentId: string
 ): Promise<boolean> {
-  const supabase = await createClient();
-
+  const supabase = await supabaseAdmin();
+  // we have to use supabase serivce key to update order status
   const { error } = await supabase
     .from('orders')
-    .update({ status })
-    .eq('id', orderId);
+    .update({ status, stripe_payment_intent_id: paymentIntentId })
+    .eq('id', orderId)
+    .select();
 
   if (error) {
     console.error('Error updating order status:', error);
@@ -222,4 +225,33 @@ export async function getAllOrders(
   }
 
   return data as Order[];
+}
+
+export async function getTotalOrdersCount(status?: string, userId?: string) {
+  const supabase = await createClient();
+  try {
+    let query = supabase.from('orders').select('id', { count: 'exact', head: true });
+
+    // Filter by user
+    if (userId) {
+      query = query.eq('user_id', userId);
+    }
+
+    // Filter by status
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    const { count, error } = await query;
+
+    if (error) {
+      console.error('Error fetching orders count:', error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (err) {
+    console.error('Unexpected error fetching orders count:', err);
+    return 0;
+  }
 }

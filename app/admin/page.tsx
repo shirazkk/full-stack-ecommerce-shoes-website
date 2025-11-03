@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import Image from 'next/image';
-import { 
-  DollarSign, 
-  ShoppingCart, 
-  Package, 
-  Users, 
-  TrendingUp, 
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import {
+  DollarSign,
+  ShoppingCart,
+  Package,
+  Users,
+  TrendingUp,
   TrendingDown,
   Eye,
   Star,
   ArrowUpRight,
-  ArrowDownRight
-} from 'lucide-react';
-import Link from 'next/link';
+  ArrowDownRight,
+} from "lucide-react";
+import Link from "next/link";
 
 interface DashboardStats {
   totalRevenue: number;
@@ -36,7 +36,7 @@ interface RecentOrder {
   orderNumber: string;
   customer: string;
   amount: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
   date: string;
 }
 
@@ -67,7 +67,7 @@ export default function AdminDashboard() {
     // Simulate API calls
     setTimeout(() => {
       setStats({
-        totalRevenue: 125430.50,
+        totalRevenue: 125430.5,
         totalOrders: 1247,
         totalProducts: 156,
         totalUsers: 892,
@@ -79,60 +79,63 @@ export default function AdminDashboard() {
 
       setRecentOrders([
         {
-          id: '1',
-          orderNumber: 'ORD-2024-001',
-          customer: 'John Doe',
-          amount: 259.20,
-          status: 'delivered',
-          date: '2024-01-18T14:20:00Z',
+          id: "1",
+          orderNumber: "ORD-2024-001",
+          customer: "John Doe",
+          amount: 259.2,
+          status: "delivered",
+          date: "2024-01-18T14:20:00Z",
         },
         {
-          id: '2',
-          orderNumber: 'ORD-2024-002',
-          customer: 'Jane Smith',
-          amount: 177.00,
-          status: 'processing',
-          date: '2024-01-20T09:15:00Z',
+          id: "2",
+          orderNumber: "ORD-2024-002",
+          customer: "Jane Smith",
+          amount: 177.0,
+          status: "processing",
+          date: "2024-01-20T09:15:00Z",
         },
         {
-          id: '3',
-          orderNumber: 'ORD-2024-003',
-          customer: 'Mike Johnson',
-          amount: 320.50,
-          status: 'shipped',
-          date: '2024-01-19T16:30:00Z',
+          id: "3",
+          orderNumber: "ORD-2024-003",
+          customer: "Mike Johnson",
+          amount: 320.5,
+          status: "shipped",
+          date: "2024-01-19T16:30:00Z",
         },
         {
-          id: '4',
-          orderNumber: 'ORD-2024-004',
-          customer: 'Sarah Wilson',
+          id: "4",
+          orderNumber: "ORD-2024-004",
+          customer: "Sarah Wilson",
           amount: 145.75,
-          status: 'pending',
-          date: '2024-01-21T11:45:00Z',
+          status: "pending",
+          date: "2024-01-21T11:45:00Z",
         },
       ]);
 
       setTopProducts([
         {
-          id: '1',
-          name: 'Nike Air Max 270',
+          id: "1",
+          name: "Nike Air Max 270",
           sales: 45,
-          revenue: 5400.00,
-          image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=100&h=100&fit=crop',
+          revenue: 5400.0,
+          image:
+            "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=100&h=100&fit=crop",
         },
         {
-          id: '2',
-          name: 'Adidas Ultraboost 22',
+          id: "2",
+          name: "Adidas Ultraboost 22",
           sales: 38,
-          revenue: 7220.00,
-          image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&h=100&fit=crop',
+          revenue: 7220.0,
+          image:
+            "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&h=100&fit=crop",
         },
         {
-          id: '3',
-          name: 'Nike Air Force 1',
+          id: "3",
+          name: "Nike Air Force 1",
           sales: 52,
-          revenue: 4680.00,
-          image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=100&h=100&fit=crop',
+          revenue: 4680.0,
+          image:
+            "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=100&h=100&fit=crop",
         },
       ]);
 
@@ -141,11 +144,11 @@ export default function AdminDashboard() {
   }, []);
 
   const statusConfig = {
-    pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
-    processing: { label: 'Processing', color: 'bg-blue-100 text-blue-800' },
-    shipped: { label: 'Shipped', color: 'bg-purple-100 text-purple-800' },
-    delivered: { label: 'Delivered', color: 'bg-green-100 text-green-800' },
-    cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800' },
+    pending: { label: "Pending", color: "bg-yellow-100 text-yellow-800" },
+    processing: { label: "Processing", color: "bg-blue-100 text-blue-800" },
+    shipped: { label: "Shipped", color: "bg-purple-100 text-purple-800" },
+    delivered: { label: "Delivered", color: "bg-green-100 text-green-800" },
+    cancelled: { label: "Cancelled", color: "bg-red-100 text-red-800" },
   };
 
   if (loading) {
@@ -175,9 +178,12 @@ export default function AdminDashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-3xl font-bold text-nike-gray-900">Dashboard Overview</h1>
+        <h1 className="text-3xl font-bold text-nike-gray-900">
+          Dashboard Overview
+        </h1>
         <p className="text-nike-gray-600 mt-2">
-          Welcome to your admin dashboard. Here&apos;s what&apos;s happening with your store.
+          Welcome to your admin dashboard. Here&apos;s what&apos;s happening
+          with your store.
         </p>
       </motion.div>
 
@@ -192,7 +198,9 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-nike-gray-600">Total Revenue</p>
+                <p className="text-sm font-medium text-nike-gray-600">
+                  Total Revenue
+                </p>
                 <p className="text-2xl font-bold text-nike-gray-900">
                   ${stats.totalRevenue.toLocaleString()}
                 </p>
@@ -202,7 +210,13 @@ export default function AdminDashboard() {
                   ) : (
                     <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
                   )}
-                  <span className={`text-sm ${stats.revenueChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <span
+                    className={`text-sm ${
+                      stats.revenueChange > 0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
                     {Math.abs(stats.revenueChange)}%
                   </span>
                 </div>
@@ -218,7 +232,9 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-nike-gray-600">Total Orders</p>
+                <p className="text-sm font-medium text-nike-gray-600">
+                  Total Orders
+                </p>
                 <p className="text-2xl font-bold text-nike-gray-900">
                   {stats.totalOrders.toLocaleString()}
                 </p>
@@ -228,7 +244,11 @@ export default function AdminDashboard() {
                   ) : (
                     <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
                   )}
-                  <span className={`text-sm ${stats.ordersChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <span
+                    className={`text-sm ${
+                      stats.ordersChange > 0 ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
                     {Math.abs(stats.ordersChange)}%
                   </span>
                 </div>
@@ -244,7 +264,9 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-nike-gray-600">Total Products</p>
+                <p className="text-sm font-medium text-nike-gray-600">
+                  Total Products
+                </p>
                 <p className="text-2xl font-bold text-nike-gray-900">
                   {stats.totalProducts.toLocaleString()}
                 </p>
@@ -254,7 +276,13 @@ export default function AdminDashboard() {
                   ) : (
                     <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
                   )}
-                  <span className={`text-sm ${stats.productsChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <span
+                    className={`text-sm ${
+                      stats.productsChange > 0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
                     {Math.abs(stats.productsChange)}%
                   </span>
                 </div>
@@ -270,7 +298,9 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-nike-gray-600">Total Users</p>
+                <p className="text-sm font-medium text-nike-gray-600">
+                  Total Users
+                </p>
                 <p className="text-2xl font-bold text-nike-gray-900">
                   {stats.totalUsers.toLocaleString()}
                 </p>
@@ -280,7 +310,11 @@ export default function AdminDashboard() {
                   ) : (
                     <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
                   )}
-                  <span className={`text-sm ${stats.usersChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <span
+                    className={`text-sm ${
+                      stats.usersChange > 0 ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
                     {Math.abs(stats.usersChange)}%
                   </span>
                 </div>
@@ -325,7 +359,9 @@ export default function AdminDashboard() {
                       <p className="font-medium text-nike-gray-900 truncate">
                         {order.orderNumber}
                       </p>
-                      <p className="text-sm text-nike-gray-600">{order.customer}</p>
+                      <p className="text-sm text-nike-gray-600">
+                        {order.customer}
+                      </p>
                       <p className="text-xs text-nike-gray-500">
                         {new Date(order.date).toLocaleDateString()}
                       </p>
@@ -393,7 +429,8 @@ export default function AdminDashboard() {
                     <div className="flex items-center space-x-1">
                       <Star className="h-4 w-4 text-yellow-400 fill-current" />
                       <span className="text-sm font-medium text-nike-gray-900">
-                        {Math.floor(Math.random() * 2) + 4}.{Math.floor(Math.random() * 10)}
+                        {Math.floor(Math.random() * 2) + 4}.
+                        {Math.floor(Math.random() * 10)}
                       </span>
                     </div>
                   </motion.div>
@@ -416,19 +453,30 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button asChild className="h-auto p-4 flex flex-col items-center space-y-2">
+              <Button
+                asChild
+                className="h-auto p-4 flex flex-col items-center space-y-2"
+              >
                 <Link href="/admin/products/new">
                   <Package className="h-6 w-6" />
                   <span>Add New Product</span>
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="h-auto p-4 flex flex-col items-center space-y-2">
+              <Button
+                asChild
+                variant="outline"
+                className="h-auto p-4 flex flex-col items-center space-y-2"
+              >
                 <Link href="/admin/orders">
                   <ShoppingCart className="h-6 w-6" />
                   <span>Manage Orders</span>
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="h-auto p-4 flex flex-col items-center space-y-2">
+              <Button
+                asChild
+                variant="outline"
+                className="h-auto p-4 flex flex-col items-center space-y-2"
+              >
                 <Link href="/admin/analytics">
                   <Eye className="h-6 w-6" />
                   <span>View Analytics</span>

@@ -55,16 +55,16 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { status } = body;
+    const { status, paymentIntentId } = body;
 
-    if (!status) {
+    if (!status || !paymentIntentId) {
       return NextResponse.json(
-        { error: 'Status is required' },
+        { error: 'Status and paymentIntentId are required' },
         { status: 400 }
       );
     }
 
-    const order = await updateOrderStatus(id, status);
+    const order = await updateOrderStatus(id, status, paymentIntentId);
 
     if (!order) {
       return NextResponse.json(
@@ -73,7 +73,7 @@ export async function PATCH(
       );
     }
 
-    return NextResponse.json({ order });
+    return NextResponse.json({ message: 'Order updated successfully', order });
   } catch (error) {
     console.error('Error updating order:', error);
     return NextResponse.json(

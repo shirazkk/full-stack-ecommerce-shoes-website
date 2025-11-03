@@ -5,7 +5,7 @@ const envSchema = z.object({
   // Supabase
   NEXT_PUBLIC_SUPABASE_URL: z.string().url('Invalid Supabase URL'),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1, 'Supabase anon key is required'),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, 'Supabase service role key is required'),
+  SERVICE_KEY: z.string().min(1, 'Supabase service role key is required'),
 
   // Stripe
   STRIPE_SECRET_KEY: z.string().min(1, 'Stripe secret key is required'),
@@ -51,7 +51,7 @@ export const isTest = env.NODE_ENV === 'test';
 export const supabaseConfig = {
   url: env.NEXT_PUBLIC_SUPABASE_URL,
   anonKey: env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
+  serviceRoleKey: env.SERVICE_KEY,
 } as const;
 
 // Stripe configuration

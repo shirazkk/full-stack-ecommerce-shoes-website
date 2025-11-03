@@ -1,33 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createOrder, getUserOrders, getAllOrders } from '@/lib/services/order.service';
+import { createOrder, getUserOrders, getAllOrders, getTotalOrdersCount } from '@/lib/services/order.service';
 import { getUser, isAdmin } from '@/lib/auth/server';
+
 
 export async function GET(request: NextRequest) {
   try {
     const user = await getUser();
-    const url = new URL(request.url);
-    const status = url.searchParams.get('status');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '10');
-
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const isAdminUser = await isAdmin();
-
-    let orders;
+    const url = new URL(request.url);
+    const status = url.searchParams.get('status');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '10');
     const offset = (page - 1) * limit;
 
+    const isAdminUser = await isAdmin();
+
+    let orders: any[] = [];
+    let totalOrdersCount = 0;
+
     if (isAdminUser) {
-      // Admin can see all orders
       orders = await getAllOrders(status || undefined, limit, offset);
+      totalOrdersCount = await getTotalOrdersCount(status || undefined); // implement this in service
     } else {
-      // Regular users can only see their own orders
       orders = await getUserOrders(user.id, status || undefined, limit, offset);
+      totalOrdersCount = await getTotalOrdersCount(status || undefined, user.id);
     }
 
-    return NextResponse.json({ orders });
+    const totalPages = Math.ceil(totalOrdersCount / limit);
+
+    return NextResponse.json({
+      orders,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalOrders: totalOrdersCount,
+        hasMore: page < totalPages,
+      },
+    });
   } catch (error) {
     console.error('Error fetching orders:', error);
     return NextResponse.json(
@@ -53,7 +65,6 @@ export async function POST(request: NextRequest) {
       tax,
       shipping,
       total,
-      stripePaymentIntentId,
     } = body;
 
     // Validate required fields
@@ -72,7 +83,6 @@ export async function POST(request: NextRequest) {
       tax || 0,
       shipping || 0,
       total,
-      stripePaymentIntentId
     );
 
     if (!order) {
@@ -82,7 +92,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ order }, { status: 201 });
+    return NextResponse.json(
+      {
+        message: "Order created successfully",
+        orderId: order.id,
+        total: order.total,
+        orderNumber: order.order_number,
+      },
+      { status: 201 }
+    );
+
   } catch (error) {
     console.error('Error creating order:', error);
     return NextResponse.json(

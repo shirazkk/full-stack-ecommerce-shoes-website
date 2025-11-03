@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -7,155 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Package, Truck, CheckCircle, XCircle, Clock, Eye } from "lucide-react";
-import { Order } from "@/types";
+import { Order, PaginationData } from "@/types";
 import Link from "next/link";
 import Image from "next/image";
+import { toast } from "@/hooks/use-toast";
 
-const mockOrders: Order[] = [
-  {
-    id: "1",
-    user_id: "user-1",
-    order_number: "ORD-2024-001",
-    status: "delivered",
-    subtotal: 240.0,
-    tax: 19.2,
-    shipping: 0,
-    total: 259.2,
-    shipping_address: {
-      id: "addr-1",
-      user_id: "user-1",
-      full_name: "John Doe",
-      address_line1: "123 Main Street",
-      city: "New York",
-      state: "NY",
-      postal_code: "10001",
-      country: "US",
-      phone: "(555) 123-4567",
-    },
-    created_at: "2024-01-15T10:30:00Z",
-    updated_at: "2024-01-18T14:20:00Z",
-    order_items: [
-      {
-        id: "item-1",
-        order_id: "1",
-        product_id: "prod-1",
-        quantity: 1,
-        size: "10",
-        color: "Black",
-        price: 120.0,
-        created_at: "2024-01-15T10:30:00Z",
-        product: {
-          id: "prod-1",
-          name: "Nike Air Max 270",
-          slug: "nike-air-max-270",
-          description: "Experience ultimate comfort",
-          price: 150.0,
-          sale_price: 120.0,
-          brand: "Nike",
-          colors: ["Black", "White", "Red"],
-          sizes: ["7", "8", "9", "10", "11", "12"],
-          images: [
-            "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop",
-          ],
-          stock: 25,
-          is_featured: true,
-          is_new: true,
-          rating: 4.8,
-          reviews_count: 124,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      },
-      {
-        id: "item-2",
-        order_id: "1",
-        product_id: "prod-2",
-        quantity: 1,
-        size: "9",
-        color: "White",
-        price: 120.0,
-        created_at: "2024-01-15T10:30:00Z",
-        product: {
-          id: "prod-2",
-          name: "Nike Air Force 1",
-          slug: "nike-air-force-1",
-          description: "The basketball original",
-          price: 90.0,
-          brand: "Nike",
-          colors: ["White", "Black"],
-          sizes: ["7", "8", "9", "10", "11", "12"],
-          images: [
-            "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop",
-          ],
-          stock: 40,
-          is_featured: true,
-          is_new: false,
-          rating: 4.9,
-          reviews_count: 200,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      },
-    ],
-  },
-  {
-    id: "2",
-    user_id: "user-1",
-    order_number: "ORD-2024-002",
-    status: "processing",
-    subtotal: 150.0,
-    tax: 12.0,
-    shipping: 15.0,
-    total: 177.0,
-    shipping_address: {
-      id: "addr-1",
-      user_id: "user-1",
-      full_name: "John Doe",
-      address_line1: "123 Main Street",
-      city: "New York",
-      state: "NY",
-      postal_code: "10001",
-      country: "US",
-      phone: "(555) 123-4567",
-    },
-    created_at: "2024-01-20T09:15:00Z",
-    updated_at: "2024-01-20T09:15:00Z",
-    order_items: [
-      {
-        id: "item-3",
-        order_id: "2",
-        product_id: "prod-3",
-        quantity: 1,
-        size: "11",
-        color: "Blue",
-        price: 150.0,
-        created_at: "2024-01-20T09:15:00Z",
-        product: {
-          id: "prod-3",
-          name: "Adidas Ultraboost 22",
-          slug: "adidas-ultraboost-22",
-          description: "Incredible energy return",
-          price: 190.0,
-          brand: "Adidas",
-          colors: ["White", "Black", "Blue"],
-          sizes: ["6", "7", "8", "9", "10", "11"],
-          images: [
-            "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop",
-          ],
-          stock: 35,
-          is_featured: true,
-          is_new: false,
-          rating: 4.6,
-          reviews_count: 89,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      },
-    ],
-  },
-];
-
-const statusConfig = {
+const statusConfig: Record<
+  string,
+  { label: string; color: string; icon: any }
+> = {
   pending: {
     label: "Pending",
     color: "bg-yellow-100 text-yellow-800",
@@ -164,7 +23,7 @@ const statusConfig = {
   processing: {
     label: "Processing",
     color: "bg-blue-100 text-blue-800",
-    icon: Package,
+    icon: Truck,
   },
   shipped: {
     label: "Shipped",
@@ -186,13 +45,42 @@ const statusConfig = {
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState<PaginationData>({
+    currentPage: 1,
+    totalPages: 1,
+    totalOrders: 0,
+    hasMore: true,
+  });
+
+  const fetchOrders = async (page: number = 1) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/orders?page=${page}&limit=3`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch orders");
+      }
+
+      const data = await response.json();
+
+      setOrders(data.orders);
+
+      // Update pagination
+      setPagination(data.pagination);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load your orders",
+        variant: "destructive",
+      });
+      console.error("Error fetching orders:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setOrders(mockOrders);
-      setLoading(false);
-    }, 1000);
+    fetchOrders();
   }, []);
 
   if (loading) {
@@ -233,7 +121,7 @@ export default function OrdersPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-6 ">
             {orders.map((order, index) => {
               const statusInfo = statusConfig[order.status];
               const StatusIcon = statusInfo.icon;
@@ -328,17 +216,32 @@ export default function OrdersPage() {
                         </div>
 
                         {/* Shipping Address */}
-                        <div className="text-sm text-nike-gray-600">
-                          <p className="font-medium">Shipping to:</p>
-                          <p>
-                            {order.shipping_address.full_name}
-                            <br />
-                            {order.shipping_address.address_line1}
-                            <br />
-                            {order.shipping_address.city},{" "}
-                            {order.shipping_address.state}{" "}
-                            {order.shipping_address.postal_code}
-                          </p>
+                        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm text-nike-gray-700 text-sm">
+                          <div className="flex items-center mb-2">
+                            <Truck className="w-5 h-5 text-nike-orange-500 mr-2" />
+                            <span className="font-medium text-gray-900">
+                              Shipping Information
+                            </span>
+                          </div>
+                          <div className="space-y-1">
+                            <p>Name: {order.shipping_address.full_name}</p>
+                            <p>
+                              Address1: {order.shipping_address.address_line1}
+                            </p>
+                            {order.shipping_address.address_line2 && (
+                              <p>
+                                Address2 {order.shipping_address.address_line2}
+                              </p>
+                            )}
+                            <p>
+                              City: {order.shipping_address.city}, State:{" "}
+                              {order.shipping_address.state} Postal Code:{" "}
+                              {order.shipping_address.postal_code}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Country: {order.shipping_address.country}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -346,6 +249,26 @@ export default function OrdersPage() {
                 </motion.div>
               );
             })}
+
+            <div className="flex justify-center items-center gap-4 mt-6">
+              <Button
+                onClick={() => fetchOrders(pagination.currentPage - 1)}
+                disabled={pagination.currentPage === 1}
+              >
+                ← Previous
+              </Button>
+
+              <span className="text-sm text-gray-500">
+                Page {pagination.currentPage} of {pagination.totalPages}
+              </span>
+
+              <Button
+                onClick={() => fetchOrders(pagination.currentPage + 1)}
+                disabled={!pagination.hasMore}
+              >
+                Next →
+              </Button>
+            </div>
           </div>
         )}
       </div>

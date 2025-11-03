@@ -1,25 +1,54 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Clock, MapPin, Phone, Mail } from 'lucide-react';
-import { Order } from '@/types';
-import Link from 'next/link';
-import Image from 'next/image';
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  ArrowLeft,
+  Package,
+  Truck,
+  CheckCircle,
+  XCircle,
+  Clock,
+  MapPin,
+  Phone,
+  Mail,
+} from "lucide-react";
+import { Order } from "@/types";
+import Link from "next/link";
+import Image from "next/image";
 
 const statusConfig = {
-  pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-  processing: { label: 'Processing', color: 'bg-blue-100 text-blue-800', icon: Package },
-  shipped: { label: 'Shipped', color: 'bg-purple-100 text-purple-800', icon: Truck },
-  delivered: { label: 'Delivered', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-  cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800', icon: XCircle },
+  pending: {
+    label: "Pending",
+    color: "bg-yellow-100 text-yellow-800",
+    icon: Clock,
+  },
+  processing: {
+    label: "Processing",
+    color: "bg-blue-100 text-blue-800",
+    icon: Package,
+  },
+  shipped: {
+    label: "Shipped",
+    color: "bg-purple-100 text-purple-800",
+    icon: Truck,
+  },
+  delivered: {
+    label: "Delivered",
+    color: "bg-green-100 text-green-800",
+    icon: CheckCircle,
+  },
+  cancelled: {
+    label: "Cancelled",
+    color: "bg-red-100 text-red-800",
+    icon: XCircle,
+  },
 };
-
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -36,12 +65,12 @@ export default function OrderDetailPage() {
             setOrder(null);
             return;
           }
-          throw new Error('Failed to fetch order');
+          throw new Error("Failed to fetch order");
         }
         const data = await response.json();
         setOrder(data.order);
       } catch (error) {
-        console.error('Error fetching order:', error);
+        console.error("Error fetching order:", error);
         setOrder(null);
       } finally {
         setLoading(false);
@@ -65,7 +94,9 @@ export default function OrderDetailPage() {
     return (
       <div className="min-h-screen bg-nike-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-nike-gray-900 mb-4">Order Not Found</h1>
+          <h1 className="text-2xl font-bold text-nike-gray-900 mb-4">
+            Order Not Found
+          </h1>
           <Button asChild>
             <Link href="/account/orders">Back to Orders</Link>
           </Button>
@@ -92,11 +123,12 @@ export default function OrderDetailPage() {
             Order #{order.order_number}
           </h1>
           <p className="text-nike-body text-nike-gray-600">
-            Placed on {new Date(order.created_at).toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
+            Placed on{" "}
+            {new Date(order.created_at).toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
             })}
           </p>
         </div>
@@ -124,7 +156,8 @@ export default function OrderDetailPage() {
                       {statusInfo.label}
                     </Badge>
                     <p className="text-sm text-nike-gray-600">
-                      Last updated: {new Date(order.updated_at).toLocaleDateString()}
+                      Last updated:{" "}
+                      {new Date(order.updated_at).toLocaleDateString()}
                     </p>
                   </div>
                 </CardContent>
@@ -167,7 +200,8 @@ export default function OrderDetailPage() {
                               {item.product?.name}
                             </h4>
                             <p className="text-sm text-nike-gray-600 mb-2">
-                              {item.product?.brand} • Size: {item.size} • Color: {item.color}
+                              {item.product?.brand} • Size: {item.size} • Color:{" "}
+                              {item.color}
                             </p>
                             <p className="text-sm text-nike-gray-600">
                               Quantity: {item.quantity}
@@ -209,7 +243,11 @@ export default function OrderDetailPage() {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Shipping</span>
-                    <span>{order.shipping === 0 ? 'FREE' : `$${order.shipping.toFixed(2)}`}</span>
+                    <span>
+                      {order.shipping === 0
+                        ? "FREE"
+                        : `$${order.shipping.toFixed(2)}`}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Tax</span>
@@ -240,19 +278,21 @@ export default function OrderDetailPage() {
                 <CardContent>
                   <div className="space-y-2 text-sm">
                     <p className="font-semibold text-nike-gray-900">
-                      {order.shipping_address.full_name}
+                      Name:{order.shipping_address.full_name}
                     </p>
-                    <p>{order.shipping_address.address_line1}</p>
+                    <p>Address1: {order.shipping_address.address_line1}</p>
                     {order.shipping_address.address_line2 && (
-                      <p>{order.shipping_address.address_line2}</p>
+                      <p>Address2 {order.shipping_address.address_line2}</p>
                     )}
                     <p>
-                      {order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.postal_code}
+                      City, State, Zip: {order.shipping_address.city},{" "}
+                      {order.shipping_address.state}{" "}
+                      {order.shipping_address.postal_code}
                     </p>
-                    <p>{order.shipping_address.country}</p>
+                    <p> Country: {order.shipping_address.country}</p>
                     <div className="flex items-center space-x-2 mt-3">
                       <Phone className="h-4 w-4 text-nike-gray-400" />
-                      <span>{order.shipping_address.phone}</span>
+                      <span> Phone: {order.shipping_address.phone}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -278,7 +318,7 @@ export default function OrderDetailPage() {
                     <Package className="h-4 w-4 mr-2" />
                     Track Package
                   </Button>
-                  {order.status === 'delivered' && (
+                  {order.status === "delivered" && (
                     <Button variant="outline" className="w-full justify-start">
                       <CheckCircle className="h-4 w-4 mr-2" />
                       Leave Review

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -27,12 +27,10 @@ import {
   Star,
   ShoppingCart,
 } from "lucide-react";
-import { Product } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/hooks/use-cart";
 import { useWishlist } from "@/hooks/use-wishlist";
-
-// Categories and brands will be fetched from API
+import { Product } from "@/types";
 
 const sortOptions = [
   { value: "created_at", label: "Newest First" },
@@ -48,16 +46,18 @@ export default function ProductsPage() {
   const { toast } = useToast();
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const router = useRouter();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  // pagination
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(12);
+  const [limit] = useState(12);
   const [total, setTotal] = useState(0);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
+
   const [categories, setCategories] = useState<
-    Array<{ id: string; name: string; slug: string }>
+    { id: string; name: string; slug: string }[]
   >([]);
   const [brands, setBrands] = useState<string[]>([]);
 
@@ -68,181 +68,112 @@ export default function ProductsPage() {
   const [priceRange, setPriceRange] = useState([0, 500]);
   const [sortBy, setSortBy] = useState("created_at");
 
-  // Read URL parameters and set initial state
+  // Sync filters with URL
   useEffect(() => {
-    const category = searchParams.get("category");
-    const search = searchParams.get("search");
-    const brands = searchParams.getAll("brands");
-    const minPrice = searchParams.get("minPrice");
-    const maxPrice = searchParams.get("maxPrice");
-    const sort = searchParams.get("sort");
-
-    if (category) {
-      setSelectedCategory(category);
-    }
-    if (search) {
-      setSearchQuery(search);
-    }
-    if (brands.length > 0) {
-      setSelectedBrands(brands);
-    }
-    if (minPrice && maxPrice) {
-      setPriceRange([parseInt(minPrice), parseInt(maxPrice)]);
-    }
-    if (sort) {
-      setSortBy(sort);
-    }
-  }, [searchParams]);
+    setSelectedCategory(searchParams.get("category") || "all");
+    setSearchQuery(searchParams.get("search") || "");
+    setSelectedBrands(searchParams.getAll("brands") || []);
+    const min = searchParams.get("minPrice");
+    const max = searchParams.get("maxPrice");
+    if (min && max) setPriceRange([parseInt(min), parseInt(max)]);
+    setSortBy(searchParams.get("sort") || "created_at");
+  }, [searchParams.toString()]);
 
   // Fetch categories and brands
-  const fetchCategoriesAndBrands = useCallback(async () => {
-    try {
-      // Fetch categories
-      const categoriesResponse = await fetch("/api/categories");
-      if (categoriesResponse.ok) {
-        const categoriesData = await categoriesResponse.json();
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [catRes, brandRes] = await Promise.all([
+          fetch("/api/categories"),
+          fetch("/api/brands"),
+        ]);
+        const catData = await catRes.json();
+        const brandData = await brandRes.json();
         setCategories([
           { id: "all", name: "All Products", slug: "all" },
-          ...categoriesData.categories.map((cat: any) => ({
-            id: cat.slug,
-            name: cat.name,
-            slug: cat.slug,
+          ...catData.categories.map((c: any) => ({
+            id: c.slug,
+            name: c.name,
+            slug: c.slug,
           })),
         ]);
+        setBrands(brandData.brands);
+      } catch (error) {
+        console.error("Failed to fetch categories/brands", error);
       }
-
-      // Fetch brands
-      const brandsResponse = await fetch("/api/brands");
-      if (brandsResponse.ok) {
-        const brandsData = await brandsResponse.json();
-        setBrands(brandsData.brands);
-      }
-    } catch (error) {
-      console.error("Error fetching categories and brands:", error);
     }
+    fetchData();
   }, []);
 
-  // Fetch categories and brands on mount
+  // Fetch products
   useEffect(() => {
-    fetchCategoriesAndBrands();
-  }, [fetchCategoriesAndBrands]);
+    async function fetchProducts() {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams();
+        if (selectedCategory !== "all")
+          params.append("category", selectedCategory);
+        if (searchQuery) params.append("search", searchQuery);
+        selectedBrands.forEach((b) => params.append("brands", b));
+        if (priceRange[0] > 0) params.append("minPrice", String(priceRange[0]));
+        if (priceRange[1] < 500)
+          params.append("maxPrice", String(priceRange[1]));
 
-  // Create debounced fetch function
-  const fetchProducts = useCallback(async () => {
-    try {
-      setLoading(true);
+        const sortMapping: Record<
+          string,
+          { sortBy: string; sortOrder: string }
+        > = {
+          created_at: { sortBy: "created_at", sortOrder: "desc" },
+          price: { sortBy: "price", sortOrder: "asc" },
+          "price-desc": { sortBy: "price", sortOrder: "desc" },
+          rating: { sortBy: "rating", sortOrder: "desc" },
+          reviews_count: { sortBy: "reviews_count", sortOrder: "desc" },
+          name: { sortBy: "name", sortOrder: "asc" },
+        };
+        const sortConfig = sortMapping[sortBy];
+        if (sortConfig) {
+          params.append("sortBy", sortConfig.sortBy);
+          params.append("sortOrder", sortConfig.sortOrder);
+        }
 
-      // Build query parameters
-      const params = new URLSearchParams();
+        params.append("limit", String(limit));
+        params.append("offset", String((page - 1) * limit));
 
-      // Category filter
-      if (selectedCategory !== "all") {
-        params.append("category", selectedCategory);
+        const res = await fetch(`/api/products?${params.toString()}`);
+        const data = await res.json();
+        setProducts(data.products || []);
+        setTotal(data.total ?? data.count ?? 0);
+      } catch (error) {
+        console.error(error);
+        toast({
+          title: "Error",
+          description: "Failed to load products",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
-
-      // Search query
-      if (searchQuery) {
-        params.append("search", searchQuery);
-      }
-
-      // Brand filters
-      if (selectedBrands.length > 0) {
-        selectedBrands.forEach((brand) => params.append("brands", brand));
-      }
-
-      // Price range
-      if (priceRange[0] > 0) {
-        params.append("minPrice", priceRange[0].toString());
-      }
-      if (priceRange[1] < 500) {
-        params.append("maxPrice", priceRange[1].toString());
-      }
-
-      // Sort
-      const sortMapping: {
-        [key: string]: { sortBy: string; sortOrder: string };
-      } = {
-        created_at: { sortBy: "created_at", sortOrder: "desc" },
-        price: { sortBy: "price", sortOrder: "asc" },
-        "price-desc": { sortBy: "price", sortOrder: "desc" },
-        rating: { sortBy: "rating", sortOrder: "desc" },
-        reviews_count: { sortBy: "reviews_count", sortOrder: "desc" },
-        name: { sortBy: "name", sortOrder: "asc" },
-      };
-
-      const sortConfig = sortMapping[sortBy];
-      if (sortConfig) {
-        params.append("sortBy", sortConfig.sortBy);
-        params.append("sortOrder", sortConfig.sortOrder);
-      }
-
-      // pagination params
-      params.append("limit", String(limit));
-      params.append("offset", String((page - 1) * limit));
-
-      const response = await fetch(`/api/products?${params.toString()}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch products");
-      }
-
-      const data = await response.json();
-      setProducts(data.products || []);
-      setTotal(data.total ?? data.count ?? 0);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load products. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
+    fetchProducts();
   }, [
     selectedCategory,
     searchQuery,
     selectedBrands,
     priceRange,
     sortBy,
-    toast,
     page,
     limit,
+    toast,
   ]);
 
-  // Create debounced version
-  const debouncedFetch = useMemo(() => {
-    let timeoutId: NodeJS.Timeout;
-    return () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(fetchProducts, 300);
-    };
-  }, [fetchProducts]);
-
-  // Fetch products from API with debouncing
-  useEffect(() => {
-    debouncedFetch();
-  }, [debouncedFetch]);
-
-  // Reset to page 1 when filters/search/sort change
+  // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [
-    selectedCategory,
-    searchQuery,
-    selectedBrands,
-    priceRange,
-    sortBy,
-    limit,
-  ]);
+  }, [selectedCategory, searchQuery, selectedBrands, priceRange, sortBy]);
 
   const handleWishlistToggle = async (product: Product) => {
-    const isWishlisted = isInWishlist(product.id);
-
-    if (isWishlisted) {
-      await removeFromWishlist(product.id);
-    } else {
-      await addToWishlist(product);
-    }
+    if (isInWishlist(product.id)) await removeFromWishlist(product.id);
+    else await addToWishlist(product);
   };
 
   const handleAddToCart = async (product: Product) => {
@@ -254,32 +185,28 @@ export default function ProductsPage() {
     );
   };
 
-  // Products are already filtered and sorted by the API
-  const sortedProducts = products;
-
-  if (loading) {
+  if (loading)
     return (
-      <div className="min-h-screen bg-nike-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-nike-orange-500"></div>
       </div>
     );
-  }
 
   return (
     <div className="min-h-screen bg-nike-gray-50">
       <div className="container-nike py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-nike-display text-4xl font-bold text-nike-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-nike-gray-900 mb-4">
             All Products
           </h1>
-          <p className="text-nike-body text-nike-gray-600">
+          <p className="text-nike-gray-600">
             Discover our complete collection of premium footwear
           </p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters Sidebar */}
+          {/* Filters */}
           <div className="lg:w-80">
             <Card className="sticky top-8">
               <CardContent className="p-6">
@@ -293,15 +220,29 @@ export default function ProductsPage() {
                     onClick={() => setShowFilters(!showFilters)}
                     className="lg:hidden"
                   >
-                    <Filter className="h-4 w-4 mr-2" />
+                    <Filter className="h-4 w-4 mr-2" />{" "}
                     {showFilters ? "Hide" : "Show"} Filters
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // Reset state
+                      setSearchQuery("");
+                      setSelectedCategory("all");
+                      setSelectedBrands([]);
+                      setPriceRange([0, 500]);
+                      setSortBy("created_at");
+                      router.push("/products");
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
                 </div>
-
                 <div
-                  className={`space-y-6 ${
+                  className={`${
                     showFilters ? "block" : "hidden lg:block"
-                  }`}
+                  } space-y-6`}
                 >
                   {/* Search */}
                   <div>
@@ -318,7 +259,6 @@ export default function ProductsPage() {
                       />
                     </div>
                   </div>
-
                   {/* Category */}
                   <div>
                     <label className="text-sm font-medium text-nike-gray-700 mb-2 block">
@@ -332,15 +272,14 @@ export default function ProductsPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
+                        {categories.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-
                   {/* Brand */}
                   <div>
                     <label className="text-sm font-medium text-nike-gray-700 mb-2 block">
@@ -356,13 +295,11 @@ export default function ProductsPage() {
                             id={brand}
                             checked={selectedBrands.includes(brand)}
                             onCheckedChange={(checked) => {
-                              if (checked) {
-                                setSelectedBrands([...selectedBrands, brand]);
-                              } else {
-                                setSelectedBrands(
-                                  selectedBrands.filter((b) => b !== brand)
-                                );
-                              }
+                              setSelectedBrands(
+                                checked
+                                  ? [...selectedBrands, brand]
+                                  : selectedBrands.filter((b) => b !== brand)
+                              );
                             }}
                           />
                           <label
@@ -375,7 +312,6 @@ export default function ProductsPage() {
                       ))}
                     </div>
                   </div>
-
                   {/* Price Range */}
                   <div>
                     <label className="text-sm font-medium text-nike-gray-700 mb-2 block">
@@ -384,13 +320,12 @@ export default function ProductsPage() {
                     <Slider
                       value={priceRange}
                       onValueChange={setPriceRange}
-                      max={500}
                       min={0}
+                      max={500}
                       step={10}
                       className="w-full"
                     />
                   </div>
-
                   {/* Sort */}
                   <div>
                     <label className="text-sm font-medium text-nike-gray-700 mb-2 block">
@@ -401,9 +336,9 @@ export default function ProductsPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {sortOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
+                        {sortOptions.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>
+                            {o.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -419,8 +354,8 @@ export default function ProductsPage() {
             {/* Toolbar */}
             <div className="flex items-center justify-between mb-6">
               <p className="text-nike-gray-600">
-                Showing {Math.min((page - 1) * limit + 1, total || 0)} -{" "}
-                {Math.min(page * limit, total || 0)} of {total} products
+                Showing {Math.min((page - 1) * limit + 1, total)} -{" "}
+                {Math.min(page * limit, total)} of {total} products
               </p>
               <div className="flex items-center space-x-2">
                 <Button
@@ -441,7 +376,7 @@ export default function ProductsPage() {
             </div>
 
             {/* Products */}
-            {sortedProducts.length === 0 ? (
+            {products.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-nike-gray-500 text-lg">
                   No products found matching your criteria.
@@ -467,7 +402,7 @@ export default function ProductsPage() {
                     : "grid-cols-1"
                 }`}
               >
-                {sortedProducts.map((product, index) => (
+                {products.map((product, index) => (
                   <motion.div
                     key={product.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -498,7 +433,6 @@ export default function ProductsPage() {
                             </Badge>
                           )}
                         </div>
-
                         <Button
                           variant="ghost"
                           size="icon"
@@ -514,61 +448,54 @@ export default function ProductsPage() {
                           />
                         </Button>
                       </div>
-
                       <CardContent className="p-4">
-                        <div className="space-y-2">
-                          <h3 className="font-semibold text-nike-gray-900 group-hover:text-nike-orange-500 transition-colors">
-                            <Link href={`/products/${product.slug}`}>
-                              {product.name}
-                            </Link>
-                          </h3>
-                          <p className="text-sm text-nike-gray-600">
-                            {product.brand}
-                          </p>
-
-                          <div className="flex items-center space-x-1">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-3 w-3 ${
-                                  i < Math.floor(product.rating)
-                                    ? "text-yellow-400 fill-current"
-                                    : "text-gray-300"
-                                }`}
-                              />
-                            ))}
-                            <span className="text-xs text-nike-gray-500 ml-1">
-                              ({product.reviews_count})
-                            </span>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              {product.sale_price ? (
-                                <>
-                                  <span className="text-lg font-bold text-nike-gray-900">
-                                    ${product.sale_price}
-                                  </span>
-                                  <span className="text-sm text-nike-gray-500 line-through">
-                                    ${product.price}
-                                  </span>
-                                </>
-                              ) : (
+                        <h3 className="font-semibold text-nike-gray-900 group-hover:text-nike-orange-500 transition-colors">
+                          <Link href={`/products/${product.slug}`}>
+                            {product.name}
+                          </Link>
+                        </h3>
+                        <p className="text-sm text-nike-gray-600">
+                          {product.brand}
+                        </p>
+                        <div className="flex items-center space-x-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-3 w-3 ${
+                                i < Math.floor(product.rating)
+                                  ? "text-yellow-400 fill-current"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          ))}
+                          <span className="text-xs text-nike-gray-500 ml-1">
+                            ({product.reviews_count})
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            {product.sale_price ? (
+                              <>
                                 <span className="text-lg font-bold text-nike-gray-900">
+                                  ${product.sale_price}
+                                </span>
+                                <span className="text-sm text-nike-gray-500 line-through">
                                   ${product.price}
                                 </span>
-                              )}
-                            </div>
-
-                            <Button
-                              size="sm"
-                              onClick={() => handleAddToCart(product)}
-                              className="btn-nike-primary"
-                            >
-                              <ShoppingCart className="h-4 w-4 mr-1" />
-                              Add
-                            </Button>
+                              </>
+                            ) : (
+                              <span className="text-lg font-bold text-nike-gray-900">
+                                ${product.price}
+                              </span>
+                            )}
                           </div>
+                          <Button
+                            size="sm"
+                            onClick={() => handleAddToCart(product)}
+                            className="btn-nike-primary"
+                          >
+                            <ShoppingCart className="h-4 w-4 mr-1" /> Add
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -576,7 +503,8 @@ export default function ProductsPage() {
                 ))}
               </div>
             )}
-            {/* Pagination controls */}
+
+            {/* Pagination */}
             {total > 0 && (
               <div className="flex items-center justify-between mt-6">
                 <div className="text-sm text-nike-gray-600">
@@ -592,7 +520,6 @@ export default function ProductsPage() {
                   >
                     Previous
                   </Button>
-
                   <div className="flex items-center space-x-1 px-2">
                     {Array.from({
                       length: Math.max(1, Math.ceil(total / limit)),
@@ -610,7 +537,6 @@ export default function ProductsPage() {
                       );
                     })}
                   </div>
-
                   <Button
                     size="sm"
                     variant="outline"

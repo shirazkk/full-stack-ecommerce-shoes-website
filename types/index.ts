@@ -124,3 +124,11 @@ export interface AuthSession {
   };
   accessToken: string;
 }
+
+
+export interface PaginationData {
+  currentPage: number;
+  totalPages: number;
+  totalOrders: number;
+  hasMore: boolean;
+}
