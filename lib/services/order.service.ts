@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { Order, OrderItem, Address } from '@/types';
-import { supabaseAdmin } from '../supabase/subabaseadmin';
+import { supabaseAdmin } from '../supabase/supabaseAdmin';
+
 
 export async function createOrder(
   userId: string,
