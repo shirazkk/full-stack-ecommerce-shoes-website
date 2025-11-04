@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import type Stripe from "stripe"
 import { stripe } from "@/lib/stripe/server"
-import { updateOrderStatus } from "@/lib/services/order.service"
+import { getOrderById, getOrderId, updateOrderStatus } from "@/lib/services/order.service"
+import { ProductService } from "@/lib/services/product.service";
 
 
 export async function POST(req: Request) {
@@ -38,6 +39,17 @@ export async function POST(req: Request) {
         if (orderId) {
           await updateOrderStatus(orderId, "processing", paymentIntent.id)
           console.log("✅ Order marked as processing")
+
+          const order = await getOrderId(orderId);
+          console.log(order)
+
+          if (order?.order_items) {
+            for (const item of order.order_items) {
+              await ProductService.decreaseStock(item.product_id!, item.quantity);
+              console.log("items" + item)
+            }
+          }
+          console.log("✅ Stock levels updated")
         } else {
           console.warn("⚠️ No orderId found in metadata")
         }

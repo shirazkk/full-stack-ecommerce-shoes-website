@@ -67,6 +67,7 @@ export default function StripePaymentFlow({
   const handleCancel = () => {
     if (confirm("Are you sure you want to cancel this payment?")) {
       // You can redirect back to cart or previous step
+
       window.history.back();
     }
   };

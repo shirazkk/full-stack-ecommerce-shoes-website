@@ -256,3 +256,31 @@ export async function getTotalOrdersCount(status?: string, userId?: string) {
     return 0;
   }
 }
+
+
+export async function getOrderId(orderId: string): Promise<Order | null> {
+  const supabase = await supabaseAdmin();
+
+  const { data, error } = await supabase
+    .from("orders")
+    .select(`
+      id,
+      user_id,
+      total,
+      status,
+      order_items (
+        product_id,
+        quantity
+      )
+    `)
+    .eq("id", orderId)
+    .single();
+
+  if (error) {
+    console.error("❌ Error fetching order:", error);
+    return null;
+  }
+
+  return data as Order;
+
+}

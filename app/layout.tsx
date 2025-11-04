@@ -6,7 +6,6 @@ import { Toaster } from '@/components/ui/toaster';
 import { Footer } from '@/components/footer';
 import { CartProvider } from '@/hooks/use-cart';
 import { WishlistProvider } from '@/hooks/use-wishlist';
-import SmokeyCursor from '@/components/cursor';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -82,7 +81,6 @@ export default function RootLayout({
               <main className="flex-1">{children}</main>
               <Footer />
             </div>
-            <SmokeyCursor />
             <Toaster />
           </WishlistProvider>
         </CartProvider>

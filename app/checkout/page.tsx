@@ -212,16 +212,8 @@ export default function CheckoutPage() {
   };
 
   // This function is called after successful payment
-  const handlePaymentSuccess = async (paymentIntentId: string) => {
+  const handlePaymentSuccess = async () => {
     try {
-      // // we have to use supabase serivce key to update order status
-
-      // await axios.patch(`/api/orders/${orderData?.orderId}`, {
-      //   status: "processing",
-      //   paymentIntentId,
-      // });
-
-      // Update order status to "paid"
       toast({
         title: "Order Placed Successfully!",
         description:
@@ -229,7 +221,7 @@ export default function CheckoutPage() {
       });
 
       // Redirect to orders page
-      router.push("/account/orders");
+      router.push("/account/orders/" + orderData?.orderId + "?success=true");
 
       // Clear cart
       await clearCart();

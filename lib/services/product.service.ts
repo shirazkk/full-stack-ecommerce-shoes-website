@@ -1,5 +1,6 @@
 import { createClient } from '../supabase/server';
 import { Product, Category } from '@/types';
+import { supabaseAdmin } from '../supabase/supabaseAdmin';
 
 export interface ProductFilters {
   category?: string;
@@ -337,4 +338,42 @@ export class ProductService {
 
     return true;
   }
+
+  static async decreaseStock(productId: string, quantity: number): Promise<void> {
+    const supabase = await supabaseAdmin();
+
+    // 1️⃣ Get current stock
+    const { data, error } = await supabase
+      .from('products')
+      .select('stock')
+      .eq('id', productId)
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to fetch stock for product ${productId}: ${error?.message}`);
+    }
+
+    const currentStock = data.stock ?? 0;
+    const newStock = currentStock - quantity;
+
+    // 2️⃣ Prevent negative stock
+    if (newStock < 0) {
+      throw new Error('Insufficient stock');
+    }
+
+    // 3️⃣ Update stock
+    const { error: updateError } = await supabase
+      .from('products')
+      .update({ stock: newStock })
+      .eq('id', productId)
+      .gte('stock', quantity);
+
+    if (updateError) {
+      throw new Error(`Failed to update stock: ${updateError.message}`);
+    }
+
+    console.log(`Stock updated: ${productId} → ${newStock}`);
+  }
+
 }
+

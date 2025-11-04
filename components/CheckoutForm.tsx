@@ -81,7 +81,6 @@ export default function CheckoutForm({
           setSucceeded(true);
           setProcessing(false);
           setTimeout(() => onSuccess(paymentIntent), 1500);
-          await clearCart(orderId);
           return;
         }
 
