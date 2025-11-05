@@ -1,14 +1,19 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/supabaseAdmin";
 
-export async function GET() {
-    const supabase = supabaseAdmin();
-
+export async function GET(req: Request) {
     try {
+        const url = new URL(req.url);
+        const secret = url.searchParams.get("secret");
+
+        if (!secret || secret !== process.env.CRON_SECRET) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const supabase = supabaseAdmin();
         const now = new Date();
         const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
 
-        // Delete or update old pending orders
         const { data, error } = await supabase
             .from("orders")
             .delete()
