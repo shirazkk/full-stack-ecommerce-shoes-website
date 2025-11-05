@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server"
 import type Stripe from "stripe"
 import { stripe } from "@/lib/stripe/server"
-import { getOrderById, getOrderId, updateOrderStatus } from "@/lib/services/order.service"
+import { getOrderId, updateOrderStatus } from "@/lib/services/order.service"
 import { ProductService } from "@/lib/services/product.service";
+import { sendEmail } from "@/lib/Email/email";
+import { orderSuccessTemplate, paymentFailedTemplate } from "@/lib/Email/emailTemplates";
 
 
 export async function POST(req: Request) {
@@ -45,14 +47,25 @@ export async function POST(req: Request) {
 
           if (order?.order_items) {
             for (const item of order.order_items) {
-              await ProductService.decreaseStock(item.product_id!, item.quantity);
+              await ProductService.decreaseStock(item.product?.id!, item.quantity);
               console.log("items" + item)
             }
           }
           console.log("✅ Stock levels updated")
+
+          const email = order?.shipping_address?.email;
+          if (email) {
+            await sendEmail({
+              to: email,
+              subject: "🎉 Your PakiShoes Order is Confirmed!",
+              html: orderSuccessTemplate(order),
+            });
+          }
+
         } else {
           console.warn("⚠️ No orderId found in metadata")
         }
+
         break
       }
 
@@ -64,6 +77,21 @@ export async function POST(req: Request) {
         if (orderId) {
           await updateOrderStatus(orderId, "cancelled", paymentIntent.id)
           console.log("✅ Order marked as failed")
+
+          const order = await getOrderId(orderId);
+          console.log(order)
+
+          const email = order?.shipping_address?.email;
+          if (email) {
+            await sendEmail({
+              to: email,
+              subject: "❌ Payment Failed for Your PakiShoes Order",
+              html: paymentFailedTemplate(order),
+            });
+          }
+        }
+        else {
+          console.warn("⚠️ No orderId found in metadata")
         }
         break
       }
@@ -72,9 +100,16 @@ export async function POST(req: Request) {
         const paymentIntent = event.data.object as Stripe.PaymentIntent
         const orderId = paymentIntent.metadata?.orderId
         console.log("🎯 Order ID (canceled):", orderId)
+
         if (orderId) {
           await updateOrderStatus(orderId, "cancelled", paymentIntent.id)
-          console.log("✅ Order marked as cancelled")
+          console.log("✅ Order marked as failed")
+
+          const order = await getOrderId(orderId);
+          console.log(order)
+        }
+        else {
+          console.warn("⚠️ No orderId found in metadata")
         }
         break
       }

@@ -265,12 +265,17 @@ export async function getOrderId(orderId: string): Promise<Order | null> {
     .from("orders")
     .select(`
       id,
+      order_number,
       user_id,
       total,
       status,
+      shipping_address,
       order_items (
         product_id,
-        quantity
+        quantity,
+        size,
+        color,
+        price
       )
     `)
     .eq("id", orderId)

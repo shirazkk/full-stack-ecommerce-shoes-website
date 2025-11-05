@@ -24,6 +24,7 @@ import { useCart } from "@/hooks/use-cart";
 import { useWishlist } from "@/hooks/use-wishlist";
 import { ProductCard } from "@/components/product-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import ProductDetailSkeleton from "./loading";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -149,11 +150,7 @@ export default function ProductDetailPage() {
   };
 
   if (isInitialLoading || loading) {
-    return (
-      <div className="min-h-screen bg-nike-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-nike-orange-500"></div>
-      </div>
-    );
+    return <ProductDetailSkeleton />;
   }
 
   if (!isInitialLoading && !product) {
@@ -409,7 +406,12 @@ export default function ProductDetailPage() {
               {/* Add to Cart Button */}
               <Button
                 onClick={handleAddToCart}
-                disabled={isAddingToCart || !selectedSize || !selectedColor}
+                disabled={
+                  product?.stock === 0 ||
+                  isAddingToCart ||
+                  !selectedSize ||
+                  !selectedColor
+                }
                 className="w-full btn-nike-primary text-lg py-6"
               >
                 {isAddingToCart ? (

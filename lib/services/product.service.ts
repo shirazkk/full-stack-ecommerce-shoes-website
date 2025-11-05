@@ -375,5 +375,34 @@ export class ProductService {
     console.log(`Stock updated: ${productId} → ${newStock}`);
   }
 
+  static async reStockProduct(productId: string, quantity: number): Promise<void> {
+    const supabase = await supabaseAdmin();
+
+    const { data, error } = await supabase
+      .from('products')
+      .select('stock')
+      .eq('id', productId)
+      .maybeSingle();
+
+    if (error || !data) {
+      throw new Error(`Failed to fetch stock for product ${productId}: ${error?.message}`);
+    }
+
+    const newStock = (data.stock ?? 0) + quantity;
+
+    const { error: updateError } = await supabase
+      .from('products')
+      .update({ stock: newStock })
+      .eq('id', productId);
+
+    if (updateError) {
+      throw new Error(`Failed to update stock: ${updateError.message}`);
+    }
+
+    console.log(`✅ Stock updated: ${productId} → ${newStock}`);
+  }
+
+
+
 }
 

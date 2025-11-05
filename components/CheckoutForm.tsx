@@ -6,7 +6,6 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { AlertCircle, CheckCircle, Loader2, CreditCard } from "lucide-react";
-import { clearCart } from "@/lib/services/cart.service";
 
 interface CheckoutFormProps {
   amount: number;

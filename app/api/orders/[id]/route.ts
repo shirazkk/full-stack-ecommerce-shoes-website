@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOrderById, updateOrderStatus } from '@/lib/services/order.service';
 import { getUser, isAdmin } from '@/lib/auth/server';
+import { ProductService } from '@/lib/services/product.service';
 
 export async function GET(
   request: NextRequest,
@@ -36,6 +37,7 @@ export async function GET(
   }
 }
 
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -64,16 +66,33 @@ export async function PATCH(
       );
     }
 
-    const order = await updateOrderStatus(id, status, paymentIntentId);
-
+    // 1️⃣ Get the current order (with items)
+    const order = await getOrderById(id);
     if (!order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    // 2️⃣ If status is being changed to "cancelled", restock items
+    if (status === 'cancelled') {
+      for (const item of order.order_items!) {
+        await ProductService.reStockProduct(item.product_id!, item.quantity);
+      }
+    }
+
+    // 3️⃣ Update order status
+    const updatedOrder = await updateOrderStatus(id, status, paymentIntentId);
+
+    if (!updatedOrder) {
       return NextResponse.json(
         { error: 'Failed to update order' },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ message: 'Order updated successfully', order });
+    return NextResponse.json({
+      message: `Order updated to "${status}" successfully`,
+      order: updatedOrder,
+    });
   } catch (error) {
     console.error('Error updating order:', error);
     return NextResponse.json(

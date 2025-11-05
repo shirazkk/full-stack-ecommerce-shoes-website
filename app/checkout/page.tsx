@@ -168,6 +168,7 @@ export default function CheckoutPage() {
         postal_code: sanitizedData.zipCode,
         country: sanitizedData.country,
         phone: sanitizedData.phone,
+        email: sanitizedData.email,
       };
 
       // Create order with status "pending_payment"
