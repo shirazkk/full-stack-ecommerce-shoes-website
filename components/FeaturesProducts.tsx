@@ -1,10 +1,9 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { motion, useScroll } from "framer-motion";
+import { motion } from "framer-motion";
 import { Product } from "@/types";
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,7 +16,6 @@ const FeaturesProducts = () => {
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
       try {
-        setLoading(true);
         const response = await fetch("/api/products?isFeatured=true&limit=4");
         if (!response.ok) {
           throw new Error("Failed to fetch featured products");
@@ -59,14 +57,7 @@ const FeaturesProducts = () => {
           {loading ? (
             // Loading skeletons
             Array.from({ length: 4 }).map((_, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="group"
-              >
+              <div key={index} className="group">
                 <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                   <Skeleton className="h-64 w-full" />
                   <div className="p-6 space-y-3">
@@ -75,7 +66,7 @@ const FeaturesProducts = () => {
                     <Skeleton className="h-6 w-1/3" />
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))
           ) : error ? (
             <div className="col-span-full text-center py-12">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -26,20 +26,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-
-interface Product {
-  id: string;
-  name: string;
-  brand: string;
-  price: number;
-  salePrice?: number;
-  stock: number;
-  status: "active" | "inactive" | "draft";
-  category: string;
-  images: string[];
-  createdAt: string;
-  sales: number;
-}
+import { Product } from "@/types";
+import { toast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 const statusConfig = {
   active: { label: "Active", color: "bg-green-100 text-green-800" },
@@ -47,17 +36,15 @@ const statusConfig = {
   draft: { label: "Draft", color: "bg-yellow-100 text-yellow-800" },
 };
 
-const getStatusInfo = (status?: string) => {
-  // Provide a safe fallback when status is missing or unexpected.
-  if (!status) return { label: "Unknown", color: "bg-gray-100 text-gray-800" };
-  // @ts-ignore - index by dynamic key; fall back if not present
-  return (
-    (statusConfig as any)[status] ?? {
-      label: "Unknown",
-      color: "bg-gray-100 text-gray-800",
-    }
-  );
-};
+// const getStatusInfo = (status?: string) => {
+//   if (!status) return { label: "Unknown", color: "bg-gray-100 text-gray-800" };
+//   return (
+//     statusConfig[status as keyof typeof statusConfig] ?? {
+//       label: "Unknown",
+//       color: "bg-gray-100 text-gray-800",
+//     }
+//   );
+// };
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -68,10 +55,12 @@ export default function AdminProductsPage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [deleting, setDeleting] = useState(false);
   // Pagination
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(12);
   const [total, setTotal] = useState(0);
+  const router = useRouter();
 
   // Fetch products with pagination and optional search/category/sort params.
   useEffect(() => {
@@ -83,7 +72,8 @@ export default function AdminProductsPage() {
         params.set("limit", String(limit));
         params.set("offset", String((page - 1) * limit));
         if (searchQuery) params.set("search", searchQuery);
-        if (categoryFilter && categoryFilter !== "all") params.set("category", categoryFilter);
+        if (categoryFilter && categoryFilter !== "all")
+          params.set("category", categoryFilter);
         // map sortBy to backend-supported field names
         const sortMap: Record<string, string> = {
           name: "name",
@@ -102,6 +92,7 @@ export default function AdminProductsPage() {
         setProducts(data.products || []);
         setFilteredProducts(data.products || []);
         setTotal(data.total ?? 0);
+        setLimit(data.limit ?? 12);
       } catch (error) {
         console.error("Error fetching products:", error);
         setProducts([]);
@@ -127,21 +118,27 @@ export default function AdminProductsPage() {
     if (searchQuery) {
       filtered = filtered.filter(
         (product) =>
-          product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.category.toLowerCase().includes(searchQuery.toLowerCase())
+          (product.name?.toLowerCase() || "").includes(
+            searchQuery.toLowerCase()
+          ) ||
+          (product.brand?.toLowerCase() || "").includes(
+            searchQuery.toLowerCase()
+          ) ||
+          (product.category?.name.toLowerCase() || "").includes(
+            searchQuery.toLowerCase()
+          )
       );
     }
 
     // Status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((product) => product.status === statusFilter);
-    }
+    // if (statusFilter !== "all") {
+    //   filtered = filtered.filter((product) => product.status === statusFilter);
+    // }
 
     // Category filter
     if (categoryFilter !== "all") {
       filtered = filtered.filter(
-        (product) => product.category === categoryFilter
+        (product) => product.category?.slug === categoryFilter
       );
     }
 
@@ -155,20 +152,20 @@ export default function AdminProductsPage() {
           bValue = b.name;
           break;
         case "price":
-          aValue = a.salePrice || a.price;
-          bValue = b.salePrice || b.price;
+          aValue = a.sale_price || a.price;
+          bValue = b.sale_price || b.price;
           break;
         case "stock":
           aValue = a.stock;
           bValue = b.stock;
           break;
-        case "sales":
-          aValue = a.sales;
-          bValue = b.sales;
-          break;
+        // case "sales":
+        //   aValue = a.s;
+        //   bValue = b.sales;
+        //   break;
         case "created":
-          aValue = new Date(a.createdAt).getTime();
-          bValue = new Date(b.createdAt).getTime();
+          aValue = new Date(a.created_at).getTime();
+          bValue = new Date(b.created_at).getTime();
           break;
         default:
           aValue = a.name;
@@ -185,8 +182,40 @@ export default function AdminProductsPage() {
     setFilteredProducts(filtered);
   }, [products, searchQuery, statusFilter, categoryFilter, sortBy, sortOrder]);
 
-  const handleDeleteProduct = (productId: string) => {
-    setProducts((prev) => prev.filter((product) => product.id !== productId));
+  // setProducts((prev) => prev.filter((product) => product.id !== productId));
+  const handleDelete = async (product: Product) => {
+    if (!confirm("Are you sure you want to delete this product?")) return;
+
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/products/${product.slug}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to delete product");
+      }
+
+      toast({
+        title: "🗑️ Product Deleted",
+        description: `${product.name} has been removed successfully.`,
+      });
+
+      router.push("/admin");
+    } catch (error: any) {
+      console.error("Delete Error:", error);
+      toast({
+        title: "❌ Error",
+        description: error.message || "Failed to delete product.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleStatusChange = (productId: string, newStatus: string) => {
@@ -342,7 +371,7 @@ export default function AdminProductsPage() {
               <Card className="group hover:shadow-lg transition-all duration-300">
                 <div className="relative">
                   <div className="aspect-square relative overflow-hidden rounded-t-lg">
-                    {product.images ? (
+                    {product.images && product.images.length > 0 ? (
                       <Image
                         src={product.images[0]}
                         alt={product.name}
@@ -355,12 +384,12 @@ export default function AdminProductsPage() {
                       </div>
                     )}
 
-                    <div className="absolute top-3 left-3">
+                    {/* <div className="absolute top-3 left-3">
                       <Badge className={getStatusInfo(product.status).color}>
                         {getStatusInfo(product.status).label}
                       </Badge>
-                    </div>
-                    {product.salePrice && (
+                    </div> */}
+                    {product.sale_price && (
                       <div className="absolute top-3 right-3">
                         <Badge className="bg-red-500 text-white">Sale</Badge>
                       </div>
@@ -370,12 +399,12 @@ export default function AdminProductsPage() {
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <div className="flex space-x-2">
                       <Button variant="secondary" size="sm" asChild>
-                        <Link href={`/admin/products/${product.id}`}>
+                        <Link href={`/admin/products/${product.slug}`}>
                           <Eye className="h-4 w-4" />
                         </Link>
                       </Button>
                       <Button variant="secondary" size="sm" asChild>
-                        <Link href={`/admin/products/${product.id}/edit`}>
+                        <Link href={`/admin/products/${product.slug}/edit`}>
                           <Edit className="h-4 w-4" />
                         </Link>
                       </Button>
@@ -392,15 +421,15 @@ export default function AdminProductsPage() {
                       {product.brand}
                     </p>
                     <p className="text-xs text-nike-gray-500">
-                      {product.category}
+                      {product.category?.name}
                     </p>
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        {product.salePrice ? (
+                        {product.sale_price ? (
                           <>
                             <span className="text-lg font-bold text-nike-gray-900">
-                              ${product.salePrice}
+                              ${product.sale_price}
                             </span>
                             <span className="text-sm text-nike-gray-500 line-through">
                               ${product.price}
@@ -414,32 +443,32 @@ export default function AdminProductsPage() {
                       </div>
                       <div className="text-right text-sm text-nike-gray-600">
                         <p>Stock: {product.stock}</p>
-                        <p>Sales: {product.sales}</p>
+                        {/* <p>Sales: {product.sales}</p> */}
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between pt-2 border-t border-nike-gray-100">
                       <div className="flex space-x-1">
                         <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/admin/products/${product.id}`}>
+                          <Link href={`/admin/products/${product.slug}`}>
                             <Eye className="h-4 w-4" />
                           </Link>
                         </Button>
                         <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/admin/products/${product.id}/edit`}>
+                          <Link href={`/admin/products/${product.slug}/edit`}>
                             <Edit className="h-4 w-4" />
                           </Link>
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDeleteProduct(product.id)}
+                          onClick={() => handleDelete(product)}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                      <Select
+                      {/* <Select
                         value={product.status}
                         onValueChange={(value) =>
                           handleStatusChange(product.id, value)
@@ -453,7 +482,7 @@ export default function AdminProductsPage() {
                           <SelectItem value="inactive">Inactive</SelectItem>
                           <SelectItem value="draft">Draft</SelectItem>
                         </SelectContent>
-                      </Select>
+                      </Select> */}
                     </div>
                   </div>
                 </CardContent>
@@ -483,7 +512,8 @@ export default function AdminProductsPage() {
         {total > 0 && (
           <div className="flex items-center justify-between mt-6">
             <div className="text-sm text-nike-gray-600">
-              Showing {(page - 1) * limit + 1} - {Math.min(page * limit, total)} of {total} products
+              Showing {(page - 1) * limit + 1} - {Math.min(page * limit, total)}{" "}
+              of {total} products
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -495,7 +525,9 @@ export default function AdminProductsPage() {
                 Previous
               </Button>
               <div className="flex items-center space-x-1 px-2">
-                {Array.from({ length: Math.max(1, Math.ceil(total / limit)) }).map((_, i) => {
+                {Array.from({
+                  length: Math.max(1, Math.ceil(total / limit)),
+                }).map((_, i) => {
                   const pageNum = i + 1;
                   return (
                     <Button

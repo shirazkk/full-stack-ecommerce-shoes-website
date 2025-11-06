@@ -133,3 +133,33 @@ export interface PaginationData {
   totalOrders: number;
   hasMore: boolean;
 }
+
+// Dashboard types 
+
+export interface DashboardStats {
+  totalRevenue: number;
+  totalOrders: number;
+  totalProducts: number;
+  totalUsers: number;
+  revenueChange: number;
+  ordersChange: number;
+  productsChange: number;
+  usersChange: number;
+}
+
+export interface RecentOrder {
+  id: string;
+  orderNumber: string;
+  customer: string;
+  amount: number;
+  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  date: string;
+}
+
+export interface TopProduct {
+  id: string;
+  name: string;
+  sales: number;
+  revenue: number;
+  image: string;
+}

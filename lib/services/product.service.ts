@@ -11,6 +11,7 @@ export interface ProductFilters {
   sizes?: string[];
   isFeatured?: boolean;
   isNew?: boolean;
+  onSale?: boolean;
   search?: string;
   sortBy?: 'name' | 'price' | 'created_at' | 'rating';
   sortOrder?: 'asc' | 'desc';
@@ -82,6 +83,11 @@ export class ProductService {
     if (filters.isNew !== undefined) {
       query = query.eq('is_new', filters.isNew);
     }
+
+    if (filters.onSale) {
+      query = query.not('sale_price', 'is', null);
+    }
+
 
     if (filters.search) {
       query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%,brand.ilike.%${filters.search}%`);
@@ -274,7 +280,7 @@ export class ProductService {
   }
 
   static async createProduct(product: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product> {
-    const supabase = await createClient();
+    const supabase = await supabaseAdmin();
 
     const { data, error } = await supabase
       .from('products')
@@ -299,33 +305,38 @@ export class ProductService {
   }
 
   static async updateProduct(id: string, updates: Partial<Product>): Promise<Product> {
-    const supabase = await createClient();
+    const supabase = await supabaseAdmin();
+
+    if (!updates || Object.keys(updates).length === 0) {
+      throw new Error('No fields provided to update');
+    }
 
     const { data, error } = await supabase
       .from('products')
       .update(updates)
       .eq('id', id)
       .select(`
-        *,
-        categories:category_id (
-          id,
-          name,
-          slug,
-          description,
-          image_url
-        )
-      `)
-      .single();
+      *,
+      categories:category_id (
+        id,
+        name,
+        slug,
+        description,
+        image_url
+      )
+    `).single();
 
     if (error) {
       throw new Error(`Failed to update product: ${error.message}`);
     }
 
-    return data as Product;
+    // data will be an array → return first row
+    return data?.[0] as Product;
   }
 
+
   static async deleteProduct(id: string): Promise<boolean> {
-    const supabase = await createClient();
+    const supabase = await supabaseAdmin();
 
     const { error } = await supabase
       .from('products')
@@ -405,4 +416,3 @@ export class ProductService {
 
 
 }
-

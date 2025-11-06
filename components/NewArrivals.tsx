@@ -17,9 +17,9 @@ const NewArrivals = () => {
   useEffect(() => {
     const fetchNewArrivals = async () => {
       try {
-        setLoading(true);
-        // 🔹 Use your API to fetch new products (isNew=true)
-        const response = await fetch("/api/products?sortBy=created_at&sortOrder=desc&limit=4");
+        const response = await fetch(
+          "/api/products?sortBy=created_at&sortOrder=desc&limit=4"
+        );
         if (!response.ok) {
           throw new Error("Failed to fetch new arrival products");
         }
@@ -52,21 +52,15 @@ const NewArrivals = () => {
             New Arrivals
           </h2>
           <p className="text-nike-body text-xl text-nike-gray-600 max-w-2xl mx-auto">
-            Fresh drops just in! Discover the latest additions to our collection.
+            Fresh drops just in! Discover the latest additions to our
+            collection.
           </p>
         </motion.div>
 
         <div className="responsive-grid">
           {loading ? (
             Array.from({ length: 4 }).map((_, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="group"
-              >
+              <div key={index} className="group">
                 <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                   <Skeleton className="h-64 w-full" />
                   <div className="p-6 space-y-3">
@@ -75,12 +69,14 @@ const NewArrivals = () => {
                     <Skeleton className="h-6 w-1/3" />
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))
           ) : error ? (
             <div className="col-span-full text-center py-12">
               <p className="text-red-600 mb-4">{error}</p>
-              <Button onClick={() => window.location.reload()}>Try Again</Button>
+              <Button onClick={() => window.location.reload()}>
+                Try Again
+              </Button>
             </div>
           ) : newProducts.length === 0 ? (
             <div className="col-span-full text-center py-12">

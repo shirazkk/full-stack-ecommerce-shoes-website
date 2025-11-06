@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ProductService } from '@/lib/services/product.service';
 
+
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
@@ -15,6 +16,7 @@ export async function GET(request: NextRequest) {
       sizes: searchParams.get('sizes')?.split(',').filter(Boolean),
       isFeatured: searchParams.get('isFeatured') === 'true' ? true : searchParams.get('isFeatured') === 'false' ? false : undefined,
       isNew: searchParams.get('isNew') === 'true' ? true : searchParams.get('isNew') === 'false' ? false : undefined,
+      onSale: searchParams.get('onSale') === 'true' ? true : undefined,
       search: searchParams.get('search') || undefined,
       sortBy: (searchParams.get('sortBy') as 'name' | 'price' | 'created_at' | 'rating') || undefined,
       sortOrder: (searchParams.get('sortOrder') as 'asc' | 'desc') || undefined,
@@ -33,3 +35,20 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+
+export async function POST(req: Request) {
+  try {
+    const product = await req.json();
+    const newProduct = await ProductService.createProduct(product);
+    return NextResponse.json({ product: newProduct }, { status: 201 });
+  } catch (error: any) {
+    console.error("Create Product Error:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to create product" },
+      { status: 500 }
+    );
+  }
+}
+
+

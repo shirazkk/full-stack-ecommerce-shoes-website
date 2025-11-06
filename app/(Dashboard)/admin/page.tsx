@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,37 +15,9 @@ import {
   Eye,
   Star,
   ArrowUpRight,
-  ArrowDownRight,
 } from "lucide-react";
 import Link from "next/link";
-
-interface DashboardStats {
-  totalRevenue: number;
-  totalOrders: number;
-  totalProducts: number;
-  totalUsers: number;
-  revenueChange: number;
-  ordersChange: number;
-  productsChange: number;
-  usersChange: number;
-}
-
-interface RecentOrder {
-  id: string;
-  orderNumber: string;
-  customer: string;
-  amount: number;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
-  date: string;
-}
-
-interface TopProduct {
-  id: string;
-  name: string;
-  sales: number;
-  revenue: number;
-  image: string;
-}
+import { DashboardStats, RecentOrder, TopProduct } from "@/types";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
@@ -64,83 +35,41 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API calls
-    setTimeout(() => {
-      setStats({
-        totalRevenue: 125430.5,
-        totalOrders: 1247,
-        totalProducts: 156,
-        totalUsers: 892,
-        revenueChange: 12.5,
-        ordersChange: 8.2,
-        productsChange: 3.1,
-        usersChange: 15.7,
-      });
+    const fetchDashboard = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/admin/dashboard");
+        const data = await res.json();
+        if (res.ok) {
+          setStats({
+            ...data.stats,
+            revenueChange: 0, // You can calculate % change if needed
+            ordersChange: 0,
+            productsChange: 0,
+            usersChange: 0,
+          });
+          setRecentOrders(
+            data.recentOrders.map((o) => ({
+              id: o.id,
+              orderNumber: o.order_number,
+              customer: o.user_id, // optionally fetch name from users table
+              amount: o.total,
+              status: o.status,
+              date: o.created_at,
+            }))
+          );
+          setTopProducts(data.topProducts);
+        } else {
+          console.error("Dashboard fetch failed", data.error);
+        }
+      } catch (err) {
+        console.error("Error fetching dashboard data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      setRecentOrders([
-        {
-          id: "1",
-          orderNumber: "ORD-2024-001",
-          customer: "John Doe",
-          amount: 259.2,
-          status: "delivered",
-          date: "2024-01-18T14:20:00Z",
-        },
-        {
-          id: "2",
-          orderNumber: "ORD-2024-002",
-          customer: "Jane Smith",
-          amount: 177.0,
-          status: "processing",
-          date: "2024-01-20T09:15:00Z",
-        },
-        {
-          id: "3",
-          orderNumber: "ORD-2024-003",
-          customer: "Mike Johnson",
-          amount: 320.5,
-          status: "shipped",
-          date: "2024-01-19T16:30:00Z",
-        },
-        {
-          id: "4",
-          orderNumber: "ORD-2024-004",
-          customer: "Sarah Wilson",
-          amount: 145.75,
-          status: "pending",
-          date: "2024-01-21T11:45:00Z",
-        },
-      ]);
-
-      setTopProducts([
-        {
-          id: "1",
-          name: "Nike Air Max 270",
-          sales: 45,
-          revenue: 5400.0,
-          image:
-            "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=100&h=100&fit=crop",
-        },
-        {
-          id: "2",
-          name: "Adidas Ultraboost 22",
-          sales: 38,
-          revenue: 7220.0,
-          image:
-            "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&h=100&fit=crop",
-        },
-        {
-          id: "3",
-          name: "Nike Air Force 1",
-          sales: 52,
-          revenue: 4680.0,
-          image:
-            "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=100&h=100&fit=crop",
-        },
-      ]);
-
-      setLoading(false);
-    }, 1000);
+    fetchDashboard();
   }, []);
 
   const statusConfig = {

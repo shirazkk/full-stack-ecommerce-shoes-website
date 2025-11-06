@@ -289,3 +289,13 @@ export async function getOrderId(orderId: string): Promise<Order | null> {
   return data as Order;
 
 }
+
+export async function getOrderCount(){
+  const supabase = await supabaseAdmin();
+  const { count, error } = await supabase.from('orders').select('id', { count: 'exact', head: true });
+  if (error) {
+    console.error('Error fetching orders count:', error);
+    return 0;
+  }
+  return count || 0;
+}

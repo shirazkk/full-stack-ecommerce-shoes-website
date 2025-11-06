@@ -1,33 +1,32 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  Users, 
-  Settings, 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Users,
+  Settings,
   BarChart3,
   Menu,
   X,
   LogOut,
-  Zap
-} from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+  Zap,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const navigation = [
-  { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { name: 'Products', href: '/admin/products', icon: Package },
-  { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-  { name: 'Users', href: '/admin/users', icon: Users },
-  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-  { name: 'Settings', href: '/admin/settings', icon: Settings },
+  { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { name: "Products", href: "/admin/products", icon: Package },
+  { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
+  { name: "Users", href: "/admin/users", icon: Users },
+  { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+  { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 export default function AdminLayout({
@@ -38,65 +37,15 @@ export default function AdminLayout({
   const router = useRouter();
   const { toast } = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Check if user is admin
-    // In a real app, this would check the user's role from the session
-    const checkAdminStatus = async () => {
-      try {
-        // Mock admin check - in real app, verify with Supabase
-        setIsAdmin(true);
-        setLoading(false);
-      } catch (error) {
-        toast({
-          title: 'Access Denied',
-          description: 'You do not have admin privileges.',
-          variant: 'destructive',
-        });
-        router.push('/');
-      }
-    };
-
-    checkAdminStatus();
-  }, [router, toast]);
 
   const handleSignOut = () => {
     // In a real app, this would call the signOut function
-    router.push('/');
+    router.push("/");
     toast({
-      title: 'Signed Out',
-      description: 'You have been signed out successfully.',
+      title: "Signed Out",
+      description: "You have been signed out successfully.",
     });
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-nike-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-nike-orange-500"></div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-nike-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="text-center py-12">
-            <X className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-nike-gray-900 mb-2">Access Denied</h1>
-            <p className="text-nike-gray-600 mb-6">
-              You do not have permission to access the admin dashboard.
-            </p>
-            <Button asChild>
-              <Link href="/">Return to Home</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-nike-gray-50">
@@ -105,9 +54,14 @@ export default function AdminLayout({
         initial={{ opacity: 0, x: -300 }}
         animate={{ opacity: sidebarOpen ? 1 : 0, x: sidebarOpen ? 0 : -300 }}
         transition={{ duration: 0.3 }}
-        className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}
+        className={`fixed inset-0 z-50 lg:hidden ${
+          sidebarOpen ? "block" : "hidden"
+        }`}
       >
-        <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)} />
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50"
+          onClick={() => setSidebarOpen(false)}
+        />
         <div className="relative flex w-64 h-full bg-white">
           <div className="flex flex-col w-full">
             <div className="flex items-center justify-between p-4 border-b">
@@ -115,7 +69,9 @@ export default function AdminLayout({
                 <div className="w-8 h-8 bg-nike-orange-500 rounded-full flex items-center justify-center">
                   <Zap className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-xl font-bold text-nike-gray-900">Admin</span>
+                <span className="text-xl font-bold text-nike-gray-900">
+                  Admin
+                </span>
               </div>
               <Button
                 variant="ghost"
@@ -149,9 +105,11 @@ export default function AdminLayout({
             <div className="w-8 h-8 bg-nike-orange-500 rounded-full flex items-center justify-center">
               <Zap className="h-5 w-5 text-white" />
             </div>
-            <span className="ml-2 text-xl font-bold text-nike-gray-900">Admin Dashboard</span>
+            <span className="ml-2 text-xl font-bold text-nike-gray-900">
+              Admin Dashboard
+            </span>
           </div>
-          
+
           <nav className="flex-1 px-4 py-6 space-y-2">
             {navigation.map((item) => (
               <Link
@@ -200,9 +158,7 @@ export default function AdminLayout({
         </div>
 
         {/* Page content */}
-        <main className="p-4 lg:p-6">
-          {children}
-        </main>
+        <main className="p-4 lg:p-6">{children}</main>
       </div>
     </div>
   );

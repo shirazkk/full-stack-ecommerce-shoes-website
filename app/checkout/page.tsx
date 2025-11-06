@@ -17,6 +17,7 @@ import {
   type CheckoutFormData,
 } from "@/lib/validations/checkout";
 import { insertAddress } from "@/lib/services/address.service";
+import { ShippingService } from "@/lib/services/shipping.service";
 import { Address } from "@/types";
 
 // Import the new components
@@ -71,14 +72,17 @@ export default function CheckoutPage() {
     return sum + price * item.quantity;
   }, 0);
 
-  const shipping =
-    form.shippingMethod === "express"
-      ? 15
-      : form.shippingMethod === "overnight"
-      ? 25
-      : 0;
+  const [shipping, setShipping] = useState(0);
   const tax = +(subtotal * 0.08).toFixed(2);
   const total = +(subtotal + shipping + tax).toFixed(2);
+
+  useEffect(() => {
+    const updateShipping = async () => {
+      const cost = await ShippingService.calculateShippingCost(form.shippingMethod);
+      setShipping(cost);
+    };
+    updateShipping();
+  }, [form.shippingMethod]);
 
   const handleInputChange = (
     field: keyof CheckoutFormData,
