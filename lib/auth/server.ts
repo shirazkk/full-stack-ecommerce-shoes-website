@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '../supabase/supabaseAdmin';
 
 export interface AuthUser {
   id: string;
@@ -7,6 +8,8 @@ export interface AuthUser {
   full_name: string;
   avatar_url?: string;
   phone?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 /**
@@ -89,5 +92,13 @@ export async function authenticateUser(email: string, password: string) {
     throw new Error(`Authentication failed: ${error.message}`);
   }
 
+  return data;
+}
+
+
+export async function getAllUsers() {
+  const supabase = await supabaseAdmin();
+  const { data, error } = await supabase.from('profiles').select('*');
+  if (error) throw new Error(error.message);
   return data;
 }

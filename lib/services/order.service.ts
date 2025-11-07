@@ -149,7 +149,7 @@ export async function getUserOrders(
 export async function updateOrderStatus(
   orderId: string,
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled',
-  paymentIntentId: string
+  paymentIntentId?: string
 ): Promise<boolean> {
   const supabase = await supabaseAdmin();
   // we have to use supabase serivce key to update order status
@@ -206,7 +206,7 @@ export async function getAllOrders(
     .from('orders')
     .select(`
       *,
-      order_items (
+      order_items:order_items (
         *,
         product:products (*)
       )
@@ -225,8 +225,17 @@ export async function getAllOrders(
     return [];
   }
 
-  return data as Order[];
+  const orders = data.map((o: Order) => ({
+    ...o,
+    // customer_name: o.shipping_address?.full_name || 'Unknown',
+    // customer_email: o.shipping_address.email || 'N/A',
+    customerDetail: o.shipping_address,
+    items: Array.isArray(o.order_items) ? o.order_items.length : 0,
+  }));
+
+  return orders as Order[];
 }
+
 
 export async function getTotalOrdersCount(status?: string, userId?: string) {
   const supabase = await createClient();
@@ -290,7 +299,7 @@ export async function getOrderId(orderId: string): Promise<Order | null> {
 
 }
 
-export async function getOrderCount(){
+export async function getOrderCount() {
   const supabase = await supabaseAdmin();
   const { count, error } = await supabase.from('orders').select('id', { count: 'exact', head: true });
   if (error) {

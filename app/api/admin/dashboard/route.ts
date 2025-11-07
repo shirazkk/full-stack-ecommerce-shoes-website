@@ -51,22 +51,29 @@ export async function GET() {
         // 6️⃣ Top Products (based on quantity sold)
         const topProductsRes = await supabase
             .from("order_items")
-            .select("product_id, quantity, price, products(name, images)")
-        const productMap: Record<string, { name: string, image: string, sales: number, revenue: number }> = {};
+            .select("product_id, quantity, price, products(name,slug, images)")
+        const productMap: Record<string, { name: string, slug: string, image: string, sales: number, revenue: number }> = {};
 
         topProductsRes.data?.forEach(item => {
             const prodId = item.product_id;
+            const prod = Array.isArray(item.products) ? item.products[0] : item.products;
+
+            if (!prod) return;
+
             if (!productMap[prodId]) {
                 productMap[prodId] = {
-                    name: item.products?.name || "Unknown",
-                    image: item.products?.images?.[0] || "",
+                    name: prod.name || "Unknown",
+                    image: prod.images?.[0] || "",
+                    slug: prod.slug,
                     sales: 0,
                     revenue: 0,
                 };
             }
+
             productMap[prodId].sales += item.quantity;
             productMap[prodId].revenue += item.quantity * item.price;
         });
+
 
         const topProducts = Object.values(productMap)
             .sort((a, b) => b.sales - a.sales)

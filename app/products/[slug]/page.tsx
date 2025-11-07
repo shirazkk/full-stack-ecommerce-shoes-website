@@ -25,6 +25,7 @@ import { useWishlist } from "@/hooks/use-wishlist";
 import { ProductCard } from "@/components/product-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProductDetailSkeleton from "./loading";
+import ReviewsSection from "@/components/ReviewsSection";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -271,24 +272,49 @@ export default function ProductDetailPage() {
                   </Button>
                 )}
               </div>
-
-              <div className="flex items-center space-x-4 mb-4">
-                <div className="flex items-center space-x-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-4 w-4 ${
-                        i < Math.floor(product?.rating || 0)
-                          ? "text-yellow-400 fill-current"
-                          : "text-gray-300"
-                      }`}
-                    />
-                  ))}
+              {product?.reviews_count == 0 && product.rating == 0 ? (
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="flex items-center space-x-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star className="h-5 w-5 text-gray-300" key={i} />
+                    ))}
+                  </div>
                   <span className="text-sm text-nike-gray-600 ml-2">
-                    {product?.rating} ({product?.reviews_count} reviews)
+                    No Reviews
                   </span>
                 </div>
-              </div>
+              ) : (
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="flex items-center space-x-1">
+                    {[...Array(5)].map((_, i) => {
+                      const rating = product?.rating || 0;
+                      const full = i < Math.floor(rating);
+                      const half = !full && i < rating; // true for fractional star (like 4.5)
+
+                      return (
+                        <div key={i} className="relative">
+                          {/* Gray background star */}
+                          <Star className="h-5 w-5 text-gray-300 absolute" />
+
+                          {/* Filled yellow part (full or half) */}
+                          <div
+                            className={`overflow-hidden ${
+                              half ? "w-1/2" : full ? "w-full" : "w-0"
+                            } text-yellow-500`}
+                          >
+                            <Star className="h-5 w-5 fill-current text-yellow-400" />
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    <span className="text-sm text-nike-gray-600 ml-2">
+                      {product?.rating?.toFixed(1)} ({product?.reviews_count}{" "}
+                      reviews)
+                    </span>
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-center space-x-4 mb-6">
                 {product?.sale_price ? (
@@ -445,6 +471,9 @@ export default function ProductDetailPage() {
             </motion.div>
           </div>
         </div>
+
+        {/* Reviews Section */}
+        <ReviewsSection key={product?.id} peoductSlug={product?.slug} />
 
         {/* Related Products */}
         <motion.div

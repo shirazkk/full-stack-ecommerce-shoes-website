@@ -1,23 +1,28 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Search, 
-  ArrowUpDown, 
-  Download, 
-  RefreshCw, 
-  Eye, 
-  Edit, 
-  MoreHorizontal
-} from 'lucide-react';
-import Link from 'next/link';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Search,
+  ArrowUpDown,
+  RefreshCw,
+  Eye,
+  Edit,
+  MoreHorizontal,
+} from "lucide-react";
+import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
 
 interface Order {
   id: string;
@@ -31,50 +36,58 @@ interface Order {
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
-  processing: { label: 'Processing', color: 'bg-blue-100 text-blue-800' },
-  shipped: { label: 'Shipped', color: 'bg-purple-100 text-purple-800' },
-  delivered: { label: 'Delivered', color: 'bg-green-100 text-green-800' },
-  cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800' },
+  pending: { label: "Pending", color: "bg-yellow-100 text-yellow-800" },
+  processing: { label: "Processing", color: "bg-blue-100 text-blue-800" },
+  shipped: { label: "Shipped", color: "bg-purple-100 text-purple-800" },
+  delivered: { label: "Delivered", color: "bg-green-100 text-green-800" },
+  cancelled: { label: "Cancelled", color: "bg-red-100 text-red-800" },
 };
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const { toast } = useToast();
 
-  // ✅ Fetch real orders from API
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/orders');
-      if (!res.ok) throw new Error('Failed to fetch orders');
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "10",
+      });
+      if (statusFilter !== "all") params.append("status", statusFilter);
+
+      const res = await fetch(`/api/orders?${params.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch orders");
       const data = await res.json();
 
       const formattedOrders: Order[] = data.orders.map((o: any) => ({
         id: o.id,
         orderNumber: o.order_number || `ORD-${o.id.slice(0, 8)}`,
-        customer: o.customer_name || 'Unknown',
-        email: o.customer_email || 'N/A',
-        amount: o.total || 0,
-        status: o.status || 'pending',
+        customer: o.shipping_address.full_name || o.customer || "Unknown",
+        email: o.shipping_address.email || o.email || "N/A",
+        amount: o.total || o.amount || 0,
+        status: o.status || "pending",
         date: o.created_at,
-        items: o.items?.length || 0,
+        items: Array.isArray(o.order_items) ? o.order_items.length : 0,
       }));
 
       setOrders(formattedOrders);
       setFilteredOrders(formattedOrders);
+      setTotalPages(data.pagination.totalPages || 1);
     } catch (err) {
-      console.error('Error fetching orders:', err);
+      console.error("Error fetching orders:", err);
       toast({
-        title: 'Error loading orders',
-        description: 'Please check your API or Supabase setup.',
-        variant: 'destructive',
+        title: "Error loading orders",
+        description: "Please check your API or Supabase setup.",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -83,7 +96,7 @@ export default function AdminOrdersPage() {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [page, statusFilter]);
 
   // Filters & Sorting
   useEffect(() => {
@@ -98,38 +111,42 @@ export default function AdminOrdersPage() {
       );
     }
 
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter((order) => order.status === statusFilter);
-    }
-
     filtered.sort((a, b) => {
       let aValue: any, bValue: any;
 
       switch (sortBy) {
-        case 'date':
+        case "date":
           aValue = new Date(a.date).getTime();
           bValue = new Date(b.date).getTime();
           break;
-        case 'amount':
+        case "amount":
           aValue = a.amount;
           bValue = b.amount;
           break;
-        case 'customer':
+        case "customer":
           aValue = a.customer;
           bValue = b.customer;
+          break;
+        case "items":
+          aValue = a.items;
+          bValue = b.items;
           break;
         default:
           aValue = a.orderNumber;
           bValue = b.orderNumber;
       }
 
-      return sortOrder === 'asc'
-        ? aValue > bValue ? 1 : -1
-        : aValue < bValue ? 1 : -1;
+      return sortOrder === "asc"
+        ? aValue > bValue
+          ? 1
+          : -1
+        : aValue < bValue
+        ? 1
+        : -1;
     });
 
     setFilteredOrders(filtered);
-  }, [orders, searchQuery, statusFilter, sortBy, sortOrder]);
+  }, [orders, searchQuery, sortBy, sortOrder]);
 
   if (loading) {
     return (
@@ -149,7 +166,9 @@ export default function AdminOrdersPage() {
         className="flex items-center justify-between"
       >
         <div>
-          <h1 className="text-3xl font-bold text-nike-gray-900">Order Management</h1>
+          <h1 className="text-3xl font-bold text-nike-gray-900">
+            Order Management
+          </h1>
           <p className="text-nike-gray-600 mt-2">
             Manage and track all customer orders
           </p>
@@ -195,13 +214,14 @@ export default function AdminOrdersPage() {
                 <SelectItem value="date">Date</SelectItem>
                 <SelectItem value="amount">Amount</SelectItem>
                 <SelectItem value="customer">Customer</SelectItem>
+                <SelectItem value="items">Items</SelectItem>
                 <SelectItem value="orderNumber">Order Number</SelectItem>
               </SelectContent>
             </Select>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
             >
               <ArrowUpDown className="h-4 w-4" />
             </Button>
@@ -220,9 +240,12 @@ export default function AdminOrdersPage() {
               <thead>
                 <tr className="border-b border-nike-gray-200">
                   <th className="text-left py-3 px-4 font-semibold">Order</th>
-                  <th className="text-left py-3 px-4 font-semibold">Customer</th>
+                  <th className="text-left py-3 px-4 font-semibold">
+                    Customer
+                  </th>
                   <th className="text-left py-3 px-4 font-semibold">Status</th>
                   <th className="text-left py-3 px-4 font-semibold">Amount</th>
+                  <th className="text-left py-3 px-4 font-semibold">Items</th>
                   <th className="text-left py-3 px-4 font-semibold">Date</th>
                   <th className="text-left py-3 px-4 font-semibold">Actions</th>
                 </tr>
@@ -238,20 +261,29 @@ export default function AdminOrdersPage() {
                   >
                     <td className="py-4 px-4">
                       <p className="font-medium">{order.orderNumber}</p>
-                      <p className="text-sm text-nike-gray-600">{order.items} items</p>
                     </td>
                     <td className="py-4 px-4">
                       <p className="font-medium">{order.customer}</p>
-                      <p className="text-sm text-nike-gray-600">{order.email}</p>
+                      <p className="text-sm text-nike-gray-600">
+                        {order.email}
+                      </p>
                     </td>
                     <td className="py-4 px-4">
-                      <Badge className={statusConfig[order.status]?.color || 'bg-gray-100 text-gray-800'}>
+                      <Badge
+                        className={
+                          statusConfig[order.status]?.color ||
+                          "bg-gray-100 text-gray-800"
+                        }
+                      >
                         {statusConfig[order.status]?.label || order.status}
                       </Badge>
                     </td>
-                    <td className="py-4 px-4 font-semibold">${order.amount.toFixed(2)}</td>
+                    <td className="py-4 px-4 font-semibold">
+                      ${order.amount.toFixed(2)}
+                    </td>
+                    <td className="py-4 px-4">{order.items}</td>
                     <td className="py-4 px-4 text-nike-gray-600">
-                      {new Date(order.date).toLocaleDateString()}
+                      {new Date(order.date).toLocaleString()}
                     </td>
                     <td className="py-4 px-4 flex space-x-2">
                       <Button variant="ghost" size="sm" asChild>
@@ -274,7 +306,34 @@ export default function AdminOrdersPage() {
 
           {filteredOrders.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-nike-gray-500">No orders found matching your criteria.</p>
+              <p className="text-nike-gray-500">
+                No orders found matching your criteria.
+              </p>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center space-x-2 mt-4">
+              <Button
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              >
+                Prev
+              </Button>
+              <span className="flex items-center px-2">
+                Page {page} of {totalPages}
+              </span>
+              <Button
+                size="sm"
+                disabled={page >= totalPages}
+                onClick={() =>
+                  setPage((prev) => Math.min(prev + 1, totalPages))
+                }
+              >
+                Next
+              </Button>
             </div>
           )}
         </CardContent>

@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { Heart, ShoppingCart, Star, Zap } from 'lucide-react';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Product } from '@/types';
-import { motion } from 'framer-motion';
-import { useState } from 'react';
-import { useCart } from '@/hooks/use-cart';
-import { useWishlist } from '@/hooks/use-wishlist';
-import { useToast } from '@/hooks/use-toast';
+import Image from "next/image";
+import Link from "next/link";
+import { Heart, ShoppingCart, Star, Zap } from "lucide-react";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import { Product } from "@/types";
+import { motion } from "framer-motion";
+import { useState } from "react";
+import { useCart } from "@/hooks/use-cart";
+import { useWishlist } from "@/hooks/use-wishlist";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProductCardProps {
   product: Product;
@@ -27,7 +27,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const handleWishlistToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (isWishlisted) {
       await removeFromWishlist(product.id);
     } else {
@@ -38,8 +38,13 @@ export function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    await addToCart(product, 1, product.sizes?.[0] || 'M', product.colors?.[0] || 'Black');
+
+    await addToCart(
+      product,
+      1,
+      product.sizes?.[0] || "M",
+      product.colors?.[0] || "Black"
+    );
   };
 
   const displayPrice = product.sale_price || product.price;
@@ -101,7 +106,9 @@ export function ProductCard({ product }: ProductCardProps) {
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <Badge className="badge-nike-warning">-{discountPercentage}%</Badge>
+                  <Badge className="badge-nike-warning">
+                    -{discountPercentage}%
+                  </Badge>
                 </motion.div>
               )}
               {product.stock === 0 && (
@@ -112,7 +119,10 @@ export function ProductCard({ product }: ProductCardProps) {
             {/* Wishlist Button */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: isHovered ? 1 : 0, scale: isHovered ? 1 : 0.8 }}
+              animate={{
+                opacity: isHovered ? 1 : 0,
+                scale: isHovered ? 1 : 0.8,
+              }}
               transition={{ duration: 0.2 }}
               className="absolute top-4 right-4"
             >
@@ -124,7 +134,9 @@ export function ProductCard({ product }: ProductCardProps) {
               >
                 <Heart
                   className={`h-4 w-4 transition-colors ${
-                    isWishlisted ? 'fill-nike-orange-500 text-nike-orange-500' : 'text-nike-gray-600'
+                    isWishlisted
+                      ? "fill-nike-orange-500 text-nike-orange-500"
+                      : "text-nike-gray-600"
                   }`}
                 />
               </Button>
@@ -133,9 +145,9 @@ export function ProductCard({ product }: ProductCardProps) {
             {/* Quick Add to Cart */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
-              animate={{ 
-                opacity: isHovered ? 1 : 0, 
-                y: isHovered ? 0 : 20 
+              animate={{
+                opacity: isHovered ? 1 : 0,
+                y: isHovered ? 0 : 20,
               }}
               transition={{ duration: 0.3 }}
               className="absolute bottom-4 left-4 right-4"
@@ -175,32 +187,57 @@ export function ProductCard({ product }: ProductCardProps) {
                 </span>
               )}
             </div>
-
             {/* Rating */}
-            {product.rating > 0 && (
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
+            {product.rating == 0 && product.reviews_count == 0 ? (
+              <div className="flex items-center space-x-4 mb-4">
+                <div className="flex items-center space-x-1">
                   {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-4 w-4 ${
-                        i < Math.floor(product.rating)
-                          ? 'fill-nike-orange-400 text-nike-orange-400'
-                          : 'text-nike-gray-300'
-                      }`}
-                    />
+                    <Star className="h-5 w-5 text-gray-300" key={i} />
                   ))}
                 </div>
-                <span className="text-sm text-nike-gray-600 font-medium">
-                  {product.rating.toFixed(1)} ({product.reviews_count})
+                <span className="text-sm text-nike-gray-600 ml-2">
+                  No Reviews
                 </span>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-4 mb-4">
+                <div className="flex items-center space-x-1">
+                  {[...Array(5)].map((_, i) => {
+                    const rating = product?.rating || 0;
+                    const full = i < Math.floor(rating);
+                    const half = !full && i < rating; // true for fractional star (like 4.5)
+
+                    return (
+                      <div key={i} className="relative">
+                        {/* Gray background star */}
+                        <Star className="h-5 w-5 text-gray-300 absolute" />
+
+                        {/* Filled yellow part (full or half) */}
+                        <div
+                          className={`overflow-hidden ${
+                            half ? "w-1/2" : full ? "w-full" : "w-0"
+                          } text-yellow-500`}
+                        >
+                          <Star className="h-5 w-5 fill-current text-yellow-400" />
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <span className="text-sm text-nike-gray-600 ml-2">
+                    {product?.rating?.toFixed(1)} ({product?.reviews_count}{" "}
+                    reviews)
+                  </span>
+                </div>
               </div>
             )}
 
             {/* Colors Preview */}
             {product.colors && product.colors.length > 0 && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-nike-gray-500 uppercase tracking-wide">Colors:</span>
+                <span className="text-xs text-nike-gray-500 uppercase tracking-wide">
+                  Colors:
+                </span>
                 <div className="flex gap-1">
                   {product.colors.slice(0, 3).map((color, index) => (
                     <div
@@ -211,7 +248,9 @@ export function ProductCard({ product }: ProductCardProps) {
                     />
                   ))}
                   {product.colors.length > 3 && (
-                    <span className="text-xs text-nike-gray-500">+{product.colors.length - 3}</span>
+                    <span className="text-xs text-nike-gray-500">
+                      +{product.colors.length - 3}
+                    </span>
                   )}
                 </div>
               </div>
@@ -226,18 +265,18 @@ export function ProductCard({ product }: ProductCardProps) {
 // Helper function to get color values
 function getColorValue(color: string): string {
   const colorMap: { [key: string]: string } = {
-    'Black': '#000000',
-    'White': '#FFFFFF',
-    'Navy': '#1E3A8A',
-    'Red': '#DC2626',
-    'Blue': '#2563EB',
-    'Grey': '#6B7280',
-    'Green': '#059669',
-    'Brown': '#92400E',
-    'Pink': '#EC4899',
-    'Yellow': '#F59E0B',
-    'Orange': '#F97316',
-    'Purple': '#7C3AED',
+    Black: "#000000",
+    White: "#FFFFFF",
+    Navy: "#1E3A8A",
+    Red: "#DC2626",
+    Blue: "#2563EB",
+    Grey: "#6B7280",
+    Green: "#059669",
+    Brown: "#92400E",
+    Pink: "#EC4899",
+    Yellow: "#F59E0B",
+    Orange: "#F97316",
+    Purple: "#7C3AED",
   };
-  return colorMap[color] || '#6B7280';
+  return colorMap[color] || "#6B7280";
 }

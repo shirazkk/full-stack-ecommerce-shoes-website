@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createOrder, getUserOrders, getAllOrders, getTotalOrdersCount } from '@/lib/services/order.service';
 import { getUser, isAdmin } from '@/lib/auth/server';
+import { Order } from '@/types';
 
 
 export async function GET(request: NextRequest) {
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     const isAdminUser = await isAdmin();
 
-    let orders: any[] = [];
+    let orders: Order[] = [];
     let totalOrdersCount = 0;
 
     if (isAdminUser) {
@@ -33,6 +34,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       orders,
+      user,
       pagination: {
         currentPage: page,
         totalPages,

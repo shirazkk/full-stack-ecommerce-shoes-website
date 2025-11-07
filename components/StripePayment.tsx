@@ -57,7 +57,7 @@ export default function StripePaymentFlow({
   };
 
   const handlePaymentSuccess = (paymentIntent: any) => {
-    console.log("Payment succeeded:", paymentIntent);
+    // console.log("Payment succeeded:", paymentIntent);
     setPaymentComplete(true);
 
     // Call the parent callback with payment intent ID

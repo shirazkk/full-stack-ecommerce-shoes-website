@@ -9,7 +9,7 @@ export async function POST(request: Request) {
         if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
-        console.log("💡 Creating payment intent for user:", user)
+        // console.log("💡 Creating payment intent for user:", user)
 
         const { amount, orderId } = await request.json()
 
@@ -17,18 +17,18 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Amount and orderId are required" }, { status: 400 })
         }
 
-        console.log("💡 Payment intent amount:", amount)
-        console.log("💡 Payment intent orderId:", orderId)
+        // console.log("💡 Payment intent amount:", amount)
+        // console.log("💡 Payment intent orderId:", orderId)
 
         const metadata = {
             userId: user.id,
             orderId,
         }
 
-        console.log("💡 Payment intent metadata:", metadata)
+        // console.log("💡 Payment intent metadata:", metadata)
 
         const paymentIntent = await createPaymentIntent(amount, metadata)
-        console.log("✅ Payment intent created:", paymentIntent.id)
+        // console.log("✅ Payment intent created:", paymentIntent.id)
 
         return NextResponse.json({
             clientSecret: paymentIntent.client_secret,

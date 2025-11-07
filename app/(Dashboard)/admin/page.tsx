@@ -329,40 +329,42 @@ export default function AdminDashboard() {
             <CardContent>
               <div className="space-y-4">
                 {topProducts.map((product, index) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                    className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-nike-gray-50 transition-colors"
-                  >
-                    <div className="w-12 h-12 relative rounded-lg overflow-hidden bg-nike-gray-100">
-                      <Image
-                        src={product.image}
-                        alt={product.name}
-                        width={48}
-                        height={48}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-nike-gray-900 truncate">
-                        {product.name}
-                      </p>
-                      <div className="flex items-center space-x-2 text-sm text-nike-gray-600">
-                        <span>{product.sales} sales</span>
-                        <span>•</span>
-                        <span>${product.revenue.toFixed(2)} revenue</span>
+                  <Link key={product.slug} href={`admin/products/${product.slug}`}>
+                    <motion.div
+                      key={product.slug}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                      className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-nike-gray-50 transition-colors"
+                    >
+                      <div className="w-12 h-12 relative rounded-lg overflow-hidden bg-nike-gray-100">
+                        <Image
+                          src={product.image}
+                          alt={product.name}
+                          width={48}
+                          height={48}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <span className="text-sm font-medium text-nike-gray-900">
-                        {Math.floor(Math.random() * 2) + 4}.
-                        {Math.floor(Math.random() * 10)}
-                      </span>
-                    </div>
-                  </motion.div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-nike-gray-900 truncate">
+                          {product.name}
+                        </p>
+                        <div className="flex items-center space-x-2 text-sm text-nike-gray-600">
+                          <span>{product.sales} sales</span>
+                          <span>•</span>
+                          <span>${product.revenue.toFixed(2)} revenue</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                        <span className="text-sm font-medium text-nike-gray-900">
+                          {Math.floor(Math.random() * 2) + 4}.
+                          {Math.floor(Math.random() * 10)}
+                        </span>
+                      </div>
+                    </motion.div>
+                  </Link>
                 ))}
               </div>
             </CardContent>

@@ -158,8 +158,42 @@ export interface RecentOrder {
 
 export interface TopProduct {
   id: string;
+  slug:string;
   name: string;
   sales: number;
   revenue: number;
   image: string;
+}
+
+
+export interface StoreSettings {
+  id: string;
+  store_name: string;
+  description: string;
+  email: string;
+  contact: string;
+  address: {
+    city: string;
+    country: string;
+  };
+  logo_url: string;
+  theme_color: string;
+  currency: string;
+  tax_rate: number;
+  free_shipping_threshold: number;
+  allow_admin_signup: boolean;
+  maintenance_mode: boolean;
+}
+
+export interface Review {
+  id: string;
+  product_id: string;
+  user_id: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+  profiles?: {
+    full_name: string;
+    avatar_url?: string;
+  };
 }

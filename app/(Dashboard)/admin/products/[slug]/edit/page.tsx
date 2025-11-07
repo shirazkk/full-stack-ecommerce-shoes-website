@@ -98,9 +98,9 @@ export default function EditProductPage() {
           sizes: Array.isArray(formData.sizes)
             ? formData.sizes
             : formData.sizes.split(",").map((s: string) => s.trim()),
-          images: Array.isArray(formData.images)
-            ? formData.images
-            : formData.images.split(",").map((i: string) => i.trim()),
+          // images: Array.isArray(formData.images)
+          //   ? formData.images
+          //   : formData.images.split(",").map((i: string) => i.trim()),
           is_new: formData.is_new ? true : false,
           is_featured: formData.is_featured ? true : false,
         }),
