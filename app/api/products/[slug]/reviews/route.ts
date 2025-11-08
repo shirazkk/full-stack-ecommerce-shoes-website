@@ -1,3 +1,4 @@
+import { ProductService } from "@/lib/services/product.service";
 import { ReviewService } from "@/lib/services/review.service";
 import { supabaseAdmin } from "@/lib/supabase/supabaseAdmin";
 import { NextRequest, NextResponse } from "next/server";
@@ -15,14 +16,9 @@ export async function GET(
 
     try {
         // 1️⃣ Fetch product ID from slug
-        const supabase = await supabaseAdmin();
-        const { data: product, error: productError } = await supabase
-            .from("products")
-            .select("id")
-            .eq("slug", slug)
-            .single();
+        const product = await ProductService.getProductBySlug(slug);
 
-        if (productError || !product) {
+        if (!product) {
             throw new Error("Product not found");
         }
 
@@ -44,14 +40,9 @@ export async function POST(
     const { slug } = await params;
     try {
         const { rating, comment } = await req.json();
-        const supabase = await supabaseAdmin();
-        const { data: product, error: productError } = await supabase
-            .from("products")
-            .select("id")
-            .eq("slug", slug)
-            .single();
+        const product = await ProductService.getProductBySlug(slug);
 
-        if (productError || !product) {
+        if (!product) {
             throw new Error("Product not found");
         }
         await ReviewService.addReview(product.id, rating, comment);

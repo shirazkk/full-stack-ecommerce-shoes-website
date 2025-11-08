@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -7,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { uploadProductImagesClient } from "@/lib/uploadImage";
 
 export default function EditProductPage() {
   const { toast } = useToast();
@@ -48,33 +46,97 @@ export default function EditProductPage() {
     });
   };
 
-  // 🔹 3️⃣ Handle image upload using your helper
-  //   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  //     const files = e.target.files;
-  //     if (!files || files.length === 0) return;
+  // 🔹 3️⃣ Handle image upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-  //     setUploading(true);
-  //     try {
-  //       const urls = await uploadProductImagesClient(files, formData.slug);
-  //       setFormData((prev: any) => ({
-  //         ...prev,
-  //         images: [...(prev.images || []), ...urls],
-  //       }));
+    setUploading(true);
 
-  //       toast({
-  //         title: "✅ Upload complete",
-  //         description: `${urls.length} images added.`,
-  //       });
-  //     } catch (err: any) {
-  //       toast({
-  //         title: "Upload Error",
-  //         description: err.message,
-  //         variant: "destructive",
-  //       });
-  //     } finally {
-  //       setUploading(false);
-  //     }
-  //   };
+    try {
+      const uploadedUrls: string[] = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formDataUpload = new FormData();
+        formDataUpload.append("file", file);
+        formDataUpload.append("productId", formData.slug); // use slug as folder
+        formDataUpload.append("imageIndex", i.toString());
+
+        const res = await fetch("/api/admin/imageupload", {
+          method: "PUT",
+          body: formDataUpload,
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || "Image upload failed");
+        }
+
+        const data = await res.json();
+        uploadedUrls.push(data.publicUrl);
+      }
+
+      setFormData((prev: any) => ({
+        ...prev,
+        images: [...(prev.images || []), ...uploadedUrls],
+      }));
+
+      toast({
+        title: "✅ Images uploaded",
+        description: `${uploadedUrls.length} image(s) added.`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "Upload Error",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // 🔹 Handle image deletion
+  const handleImageDelete = async (url: string) => {
+    try {
+      const parts = url.split("/product-images/");
+      const path = parts[1]; // ✅ "products/abc123/shoe.png"
+      const bucket = "product-images"; // ✅ your bucket name
+
+      if (!path) throw new Error("Invalid image path");
+
+      // ✅ Call the DELETE API with bucket + path
+      const res = await fetch(
+        `/api/admin/imageupload?bucket=${bucket}&path=${encodeURIComponent(
+          path
+        )}`,
+        { method: "DELETE" }
+      );
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to delete image");
+      }
+
+      // ✅ Remove from local state
+      setFormData((prev: any) => ({
+        ...prev,
+        images: prev.images.filter((img: string) => img !== url),
+      }));
+
+      toast({
+        title: "🗑️ Image Deleted",
+        description: "The image was removed successfully.",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Delete Error",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   // 🔹 4️⃣ Handle form submit (PUT request)
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,35 +144,61 @@ export default function EditProductPage() {
     setLoading(true);
 
     try {
+      // 🧠 Prepare clean object (remove fields Supabase doesn’t expect)
+      const {
+        name,
+        slug,
+        description,
+        price,
+        sale_price,
+        stock,
+        brand,
+        category_id,
+        colors,
+        sizes,
+        images,
+        is_new,
+        is_featured,
+      } = formData;
+
+      const cleanData = {
+        name,
+        slug,
+        description,
+        price: parseFloat(price),
+        sale_price: sale_price ? parseFloat(sale_price) : null,
+        stock: parseInt(stock),
+        brand,
+        category_id,
+        colors: Array.isArray(colors)
+          ? colors
+          : colors.split(",").map((c: string) => c.trim()),
+        sizes: Array.isArray(sizes)
+          ? sizes
+          : sizes.split(",").map((s: string) => s.trim()),
+        images: Array.isArray(images)
+          ? images
+          : images.split(",").map((i: string) => i.trim()),
+        is_new: !!is_new,
+        is_featured: !!is_featured,
+      };
+
       const res = await fetch(`/api/products/${params.slug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price),
-          sale_price: formData.sale_price
-            ? parseFloat(formData.sale_price)
-            : null,
-          stock: parseInt(formData.stock),
-          colors: Array.isArray(formData.colors)
-            ? formData.colors
-            : formData.colors.split(",").map((c: string) => c.trim()),
-          sizes: Array.isArray(formData.sizes)
-            ? formData.sizes
-            : formData.sizes.split(",").map((s: string) => s.trim()),
-          // images: Array.isArray(formData.images)
-          //   ? formData.images
-          //   : formData.images.split(",").map((i: string) => i.trim()),
-          is_new: formData.is_new ? true : false,
-          is_featured: formData.is_featured ? true : false,
-        }),
+        body: JSON.stringify(cleanData),
       });
 
-      if (!res.ok) throw new Error("Failed to update product");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to update product");
+      }
+
       toast({
         title: "✅ Product Updated Successfully",
         description: `${formData.name} has been updated.`,
       });
+
       router.push("/admin/products");
     } catch (err: any) {
       toast({
@@ -163,7 +251,7 @@ export default function EditProductPage() {
           />
         </div>
 
-        {/* Price and Sale Price */}
+        {/* Price & Sale Price */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label>Price</Label>
@@ -186,7 +274,7 @@ export default function EditProductPage() {
           </div>
         </div>
 
-        {/* Brand and Stock */}
+        {/* Brand & Stock */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label>Brand</Label>
@@ -220,7 +308,7 @@ export default function EditProductPage() {
           />
         </div>
 
-        {/* Colors and Sizes */}
+        {/* Colors & Sizes */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label>Colors (comma separated)</Label>
@@ -270,8 +358,8 @@ export default function EditProductPage() {
           </label>
         </div>
 
-        {/* Images */}
-        {/* <div>
+        {/* Product Images */}
+        <div>
           <Label>Product Images</Label>
           <Input
             type="file"
@@ -285,18 +373,29 @@ export default function EditProductPage() {
           )}
 
           {formData.images && formData.images.length > 0 && (
-            <div className="flex gap-2 mt-2 flex-wrap">
+            <div className="flex gap-2 mt-3 flex-wrap">
               {formData.images.map((url: string, i: number) => (
-                <img
+                <div
                   key={i}
-                  src={url}
-                  alt={`product-${i}`}
-                  className="w-20 h-20 object-cover rounded border"
-                />
+                  className="relative w-20 h-20 group border rounded overflow-hidden"
+                >
+                  <img
+                    src={url}
+                    alt={`product-${i}`}
+                    className="object-cover w-full h-full"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleImageDelete(url)}
+                    className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded px-1 opacity-0 group-hover:opacity-100 transition"
+                  >
+                    ✕
+                  </button>
+                </div>
               ))}
             </div>
           )}
-        </div> */}
+        </div>
 
         {/* Submit */}
         <Button

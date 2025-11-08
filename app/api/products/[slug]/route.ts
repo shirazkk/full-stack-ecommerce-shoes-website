@@ -33,13 +33,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ slug
 
   try {
     const updates = await req.json();
-    const supabase = await supabaseAdmin();
+    const supabase = supabaseAdmin();
 
     const { data: product, error: fetchError } = await supabase
       .from("products")
       .select("id")
       .eq("slug", slug)
       .maybeSingle();
+
 
     if (fetchError || !product) {
       return NextResponse.json(

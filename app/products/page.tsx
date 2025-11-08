@@ -141,6 +141,7 @@ export default function ProductsPage() {
 
         const res = await fetch(`/api/products?${params.toString()}`);
         const data = await res.json();
+
         setProducts(data.products || []);
         setTotal(data.total ?? data.count ?? 0);
       } catch (error) {
@@ -376,6 +377,7 @@ export default function ProductsPage() {
             </div>
 
             {/* Products */}
+
             {products.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-nike-gray-500 text-lg">

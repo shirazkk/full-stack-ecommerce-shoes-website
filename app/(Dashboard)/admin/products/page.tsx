@@ -36,15 +36,15 @@ const statusConfig = {
   draft: { label: "Draft", color: "bg-yellow-100 text-yellow-800" },
 };
 
-// const getStatusInfo = (status?: string) => {
-//   if (!status) return { label: "Unknown", color: "bg-gray-100 text-gray-800" };
-//   return (
-//     statusConfig[status as keyof typeof statusConfig] ?? {
-//       label: "Unknown",
-//       color: "bg-gray-100 text-gray-800",
-//     }
-//   );
-// };
+const getStatusInfo = (status?: string) => {
+  if (!status) return { label: "Unknown", color: "bg-gray-100 text-gray-800" };
+  return (
+    statusConfig[status as keyof typeof statusConfig] ?? {
+      label: "Unknown",
+      color: "bg-gray-100 text-gray-800",
+    }
+  );
+};
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -63,46 +63,47 @@ export default function AdminProductsPage() {
   const router = useRouter();
 
   // Fetch products with pagination and optional search/category/sort params.
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+
+      const params = new URLSearchParams();
+      params.set("limit", String(limit));
+      params.set("offset", String((page - 1) * limit));
+      if (searchQuery) params.set("search", searchQuery);
+      if (categoryFilter && categoryFilter !== "all")
+        params.set("category", categoryFilter);
+      // map sortBy to backend-supported field names
+      const sortMap: Record<string, string> = {
+        name: "name",
+        price: "price",
+        created: "created_at",
+        rating: "rating",
+      };
+      if (sortBy) params.set("sortBy", sortMap[sortBy] || sortBy);
+      if (sortOrder) params.set("sortOrder", sortOrder);
+
+      const url = `/api/products?${params.toString()}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch products");
+      const data = await response.json();
+
+      setProducts(data.products || []);
+      setFilteredProducts(data.products || []);
+      setTotal(data.total ?? 0);
+      setLimit(data.limit ?? 12);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setProducts([]);
+      setFilteredProducts([]);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-
-        const params = new URLSearchParams();
-        params.set("limit", String(limit));
-        params.set("offset", String((page - 1) * limit));
-        if (searchQuery) params.set("search", searchQuery);
-        if (categoryFilter && categoryFilter !== "all")
-          params.set("category", categoryFilter);
-        // map sortBy to backend-supported field names
-        const sortMap: Record<string, string> = {
-          name: "name",
-          price: "price",
-          created: "created_at",
-          rating: "rating",
-        };
-        if (sortBy) params.set("sortBy", sortMap[sortBy] || sortBy);
-        if (sortOrder) params.set("sortOrder", sortOrder);
-
-        const url = `/api/products?${params.toString()}`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("Failed to fetch products");
-        const data = await response.json();
-
-        setProducts(data.products || []);
-        setFilteredProducts(data.products || []);
-        setTotal(data.total ?? 0);
-        setLimit(data.limit ?? 12);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        setProducts([]);
-        setFilteredProducts([]);
-        setTotal(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProducts();
   }, [page, limit, searchQuery, categoryFilter, sortBy, sortOrder]);
 
@@ -131,9 +132,9 @@ export default function AdminProductsPage() {
     }
 
     // Status filter
-    // if (statusFilter !== "all") {
-    //   filtered = filtered.filter((product) => product.status === statusFilter);
-    // }
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((product) => product.status === statusFilter);
+    }
 
     // Category filter
     if (categoryFilter !== "all") {
@@ -218,15 +219,59 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleStatusChange = (productId: string, newStatus: string) => {
-    setProducts((prev) =>
-      prev.map((product) =>
-        product.id === productId
-          ? { ...product, status: newStatus as any }
-          : product
-      )
-    );
+  const handleExport = () => {
+    if (!products || products.length === 0) return;
+
+    // Map products to CSV rows
+    const headers = [
+      "ID",
+      "Name",
+      "Description",
+      "Brand",
+      "Category",
+      "Colors",
+      "Is-Featured",
+      "Is-New",
+      "Status",
+      "Price",
+      "Stock",
+    ];
+    const rows = products.map((p) => [
+      p.id,
+      `"${p.name}"`,
+      `"${p.description || ""}"`,
+      `"${p.brand}"`,
+      `"${p.category_id || ""}"`,
+      `"${p.colors || ""}"`,
+      `"${p.is_featured || ""}"`,
+      `"${p.is_new || ""}"`,
+      p.status,
+      p.price,
+      p.stock,
+    ]);
+
+    const csvContent = [headers, ...rows].map((e) => e.join(",")).join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "products_export.csv");
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
+
+  // const handleStatusChange = (productId: string, newStatus: string) => {
+  //   setProducts((prev) =>
+  //     prev.map((product) =>
+  //       product.id === productId
+  //         ? { ...product, status: newStatus as any }
+  //         : product
+  //     )
+  //   );
+  // };
 
   if (loading) {
     return (
@@ -257,11 +302,11 @@ export default function AdminProductsPage() {
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
+          <Button onClick={handleExport} variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Button variant="outline" size="sm">
+          <Button onClick={fetchProducts} variant="outline" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
@@ -384,14 +429,19 @@ export default function AdminProductsPage() {
                       </div>
                     )}
 
-                    {/* <div className="absolute top-3 left-3">
+                    <div className="absolute top-1/2 left-1/2 ">
                       <Badge className={getStatusInfo(product.status).color}>
                         {getStatusInfo(product.status).label}
                       </Badge>
-                    </div> */}
+                    </div>
                     {product.sale_price && (
                       <div className="absolute top-3 right-3">
                         <Badge className="bg-red-500 text-white">Sale</Badge>
+                      </div>
+                    )}
+                    {product.is_new && (
+                      <div className="absolute top-3 left-3">
+                        <Badge className="bg-green-500 text-white">New</Badge>
                       </div>
                     )}
                   </div>

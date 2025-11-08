@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { env } from '@/lib/env';
+import { supabaseAdmin } from '../supabase/supabaseAdmin';
 
 export interface UploadOptions {
   bucket: string;
@@ -28,7 +29,7 @@ export interface ImageResizeOptions {
  */
 export async function uploadFile(options: UploadOptions): Promise<UploadResult> {
   const supabase = await createClient();
-  
+
   const { bucket, path, file, contentType, cacheControl, upsert = false } = options;
 
   const { data, error } = await supabase.storage
@@ -66,9 +67,9 @@ export async function uploadImage(
   // For now, we'll upload the original file
   // In production, you might want to use a service like Cloudinary or ImageKit
   // for automatic image optimization
-  
+
   const contentType = file.type || 'image/jpeg';
-  
+
   return uploadFile({
     bucket,
     path,
@@ -168,12 +169,14 @@ export async function uploadCategoryImage(
  * Delete a file from Supabase Storage
  */
 export async function deleteFile(bucket: string, path: string): Promise<void> {
-  const supabase = await createClient();
-  
-  const { error } = await supabase.storage
+  const supabase = await supabaseAdmin();
+  console.log("🗑️ Deleting from bucket:", bucket, "path:", path);
+
+  const { data, error } = await supabase.storage
     .from(bucket)
     .remove([path]);
 
+  console.log("Delete result:", data, error);
   if (error) {
     throw new Error(`Failed to delete file: ${error.message}`);
   }
@@ -191,7 +194,7 @@ export function getPublicUrl(bucket: string, path: string): string {
  */
 export async function listFiles(bucket: string, path?: string) {
   const supabase = await createClient();
-  
+
   const { data, error } = await supabase.storage
     .from(bucket)
     .list(path);

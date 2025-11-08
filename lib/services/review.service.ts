@@ -1,6 +1,7 @@
 import { Review } from "@/types";
 import { createClient } from "../supabase/client";
 import { supabaseAdmin } from "../supabase/supabaseAdmin";
+import { getUser } from "../auth/server";
 
 
 
@@ -24,11 +25,9 @@ export class ReviewService {
 
   // ✅ Post a new review
   static async addReview(productId: string, rating: number, comment: string) {
-    const supabase = await createClient();
+    const supabase = await supabaseAdmin();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getUser();
 
     if (!user) throw new Error("You must be logged in to post a review");
 
@@ -47,9 +46,7 @@ export class ReviewService {
   static async updateReview(reviewId: string, rating: number, comment: string) {
     const supabase = await supabaseAdmin();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getUser();
 
     if (!user) throw new Error("You must be logged in");
 
@@ -64,10 +61,8 @@ export class ReviewService {
   }
 
   static async deleteReview(reviewId: string) {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const supabase = await supabaseAdmin();
+    const user = await getUser();
 
     if (!user) throw new Error("You must be logged in");
 

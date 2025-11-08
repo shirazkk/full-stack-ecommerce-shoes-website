@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
       sortOrder: (searchParams.get('sortOrder') as 'asc' | 'desc') || undefined,
       limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 12,
       offset: searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : 0,
+      status: (searchParams.get('status') as 'active' | 'inactive' | 'draft') || undefined,
     };
 
     const result = await ProductService.getAllProducts(filters);
@@ -50,5 +51,6 @@ export async function POST(req: Request) {
     );
   }
 }
+
 
 

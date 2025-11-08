@@ -17,6 +17,7 @@ export interface ProductFilters {
   sortOrder?: 'asc' | 'desc';
   limit?: number;
   offset?: number;
+  status?: 'active' | 'inactive' | 'draft';
 }
 
 export interface ProductSearchResult {
@@ -40,7 +41,7 @@ export class ProductService {
           description,
           image_url
         )
-      `, { count: 'exact' });
+      `, { count: 'exact' })
 
     // Apply filters
     if (filters.category) {
@@ -91,6 +92,10 @@ export class ProductService {
 
     if (filters.search) {
       query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%,brand.ilike.%${filters.search}%`);
+    }
+
+    if (filters.status) {
+      query = query.eq('status', filters.status);
     }
 
     // Apply sorting
@@ -305,35 +310,35 @@ export class ProductService {
   }
 
   static async updateProduct(id: string, updates: Partial<Product>): Promise<Product> {
-    const supabase = await supabaseAdmin();
+    const supabase = supabaseAdmin();
 
-    if (!updates || Object.keys(updates).length === 0) {
-      throw new Error('No fields provided to update');
+    if (!id) {
+      throw new Error('Product ID is required');
     }
 
+    // perform update without relationship selection
     const { data, error } = await supabase
-      .from('products')
+      .from("products")
       .update(updates)
-      .eq('id', id)
+      .eq("id", id)
       .select(`
-      *,
-      categories:category_id (
-        id,
-        name,
-        slug,
-        description,
-        image_url
-      )
-    `).single();
+        *,
+        categories:category_id (
+          id,
+          name,
+          slug,
+          description,
+          image_url
+        )
+      `)
+      .maybeSingle();
 
     if (error) {
       throw new Error(`Failed to update product: ${error.message}`);
     }
 
-    // data will be an array → return first row
-    return data?.[0] as Product;
+    return data as Product;
   }
-
 
   static async deleteProduct(id: string): Promise<boolean> {
     const supabase = await supabaseAdmin();

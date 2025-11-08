@@ -473,7 +473,10 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Reviews Section */}
-        <ReviewsSection key={product?.id} peoductSlug={product?.slug} />
+        <ReviewsSection
+          key={product?.slug !== undefined ? product?.slug : ""}
+          productSlug={product?.slug !== undefined ? product?.slug : ""}
+        />
 
         {/* Related Products */}
         <motion.div

@@ -3,17 +3,17 @@ import { ReviewService } from "@/lib/services/review.service";
 
 // ✅ Update review
 export async function PUT(request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-    const { id } = await params;
-    try {
-        const { rating, comment } = await request.json();
-        await ReviewService.updateReview(id, rating, comment);
-        return NextResponse.json({ success: true });
-    } catch (error: any) {
-        console.error("❌ Error updating review:", error.message);
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+  const { id } = await params;
+  try {
+    const { rating, comment } = await request.json();
+    await ReviewService.updateReview(id, rating, comment);
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("❌ Error updating review:", error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 // 🗑 DELETE /api/reviews/:id

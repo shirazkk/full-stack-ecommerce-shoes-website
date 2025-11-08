@@ -6,7 +6,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Trash2, Save } from "lucide-react";
+import { ArrowLeft, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -111,10 +111,9 @@ export default function AdminProductPage() {
             </Link>
           </Button>
           <Button variant="secondary">
-            <Edit className="h-4 w-4 mr-1" /> Edit
-          </Button>
-          <Button variant="default">
-            <Save className="h-4 w-4 mr-1" /> Update
+            <Link href={`/admin/products/${product.slug}/edit`}>
+              <Edit className="h-4 w-4 mr-1" /> Edit
+            </Link>
           </Button>
           <Button
             variant="destructive"
@@ -179,16 +178,28 @@ export default function AdminProductPage() {
               ${product.sale_price || product.price}
             </p>
             {product.sale_price && (
-              <span className="text-gray-500 line-through">${product.price}</span>
+              <span className="text-gray-500 line-through">
+                ${product.price}
+              </span>
             )}
           </div>
 
           <div className="text-gray-600 text-sm space-y-2">
-            <p><strong>ID:</strong> {product.id}</p>
-            <p><strong>Slug:</strong> {product.slug}</p>
-            <p><strong>Stock:</strong> {product.stock}</p>
-            <p><strong>Brand:</strong> {product.brand}</p>
-            <p><strong>Category ID:</strong> {product.category_id}</p>
+            <p>
+              <strong>ID:</strong> {product.id}
+            </p>
+            <p>
+              <strong>Slug:</strong> {product.slug}
+            </p>
+            <p>
+              <strong>Stock:</strong> {product.stock}
+            </p>
+            <p>
+              <strong>Brand:</strong> {product.brand}
+            </p>
+            <p>
+              <strong>Category ID:</strong> {product.category_id}
+            </p>
           </div>
 
           <div>

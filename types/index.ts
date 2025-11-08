@@ -34,6 +34,7 @@ export interface Product {
   stock: number;
   is_featured: boolean;
   is_new: boolean;
+  status?: 'active' | 'inactive' | 'draft';
   rating: number;
   reviews_count: number;
   created_at: string;

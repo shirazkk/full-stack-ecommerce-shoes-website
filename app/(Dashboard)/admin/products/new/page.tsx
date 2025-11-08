@@ -7,14 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { createClient } from "@/lib/supabase/client"; // make sure this path is correct
 
 export default function AddProductPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -47,53 +45,51 @@ export default function AddProductPage() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    setSelectedFiles(files);
     setUploading(true);
 
-    const supabase = createClient();
-    const uploadedUrls: string[] = [];
+    try {
+      const uploadedUrls: string[] = [];
+      const productId = formData.slug || `temp-${Date.now()}`;
 
-    for (const file of Array.from(files)) {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Date.now()}-${Math.random()
-        .toString(36)
-        .substring(2)}.${fileExt}`;
-      const filePath = `products/${fileName}`;
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formDataToSend = new FormData();
+        formDataToSend.append("file", file);
+        formDataToSend.append("productId", productId);
+        formDataToSend.append("imageIndex", i.toString());
 
-      const { error } = await supabase.storage
-        .from("product-images")
-        .upload(filePath, file);
-
-      if (error) {
-        console.error("❌ Upload failed:", error.message);
-        toast({
-          title: "Upload Error",
-          description: error.message,
-          variant: "destructive",
+        const res = await fetch("/api/admin/imageupload", {
+          method: "POST",
+          body: formDataToSend,
         });
-        setUploading(false);
-        return;
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || "Upload failed");
+        }
+
+        const data = await res.json();
+        uploadedUrls.push(data.publicUrl);
       }
 
-      const { data } = supabase.storage
-        .from("product-images")
-        .getPublicUrl(filePath);
+      setFormData((prev) => ({
+        ...prev,
+        images: uploadedUrls.join(", "),
+      }));
 
-      uploadedUrls.push(data.publicUrl);
+      toast({
+        title: "✅ Images uploaded successfully!",
+        description: `${uploadedUrls.length} image(s) added.`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "❌ Upload failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
     }
-
-    // Add uploaded URLs to formData.images
-    setFormData((prev) => ({
-      ...prev,
-      images: uploadedUrls.join(", "),
-    }));
-
-    toast({
-      title: "✅ Images uploaded successfully!",
-      description: `${uploadedUrls.length} image(s) added.`,
-    });
-
-    setUploading(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
