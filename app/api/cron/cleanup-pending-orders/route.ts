@@ -12,12 +12,14 @@ export async function GET(req: Request) {
 
         const supabase = supabaseAdmin();
         const now = new Date();
-        const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+
+        // Delete orders older than 7 days
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
         const { data, error } = await supabase
             .from("orders")
             .delete()
-            .lte("created_at", yesterday)
+            .lte("created_at", sevenDaysAgo)
             .eq("status", "pending");
 
         if (error) {

@@ -74,6 +74,8 @@ export default function AdminProductsPage() {
       if (searchQuery) params.set("search", searchQuery);
       if (categoryFilter && categoryFilter !== "all")
         params.set("category", categoryFilter);
+      if (statusFilter && statusFilter !== "all")
+        params.set("status", statusFilter);
       // map sortBy to backend-supported field names
       const sortMap: Record<string, string> = {
         name: "name",
@@ -105,7 +107,15 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     fetchProducts();
-  }, [page, limit, searchQuery, categoryFilter, sortBy, sortOrder]);
+  }, [
+    page,
+    limit,
+    searchQuery,
+    categoryFilter,
+    sortBy,
+    sortOrder,
+    statusFilter,
+  ]);
 
   // Reset to first page when filters/search/sort change to avoid empty pages
   useEffect(() => {
@@ -131,26 +141,14 @@ export default function AdminProductsPage() {
       );
     }
 
-    // Status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((product) => product.status === statusFilter);
-    }
-
-    // Category filter
-    if (categoryFilter !== "all") {
-      filtered = filtered.filter(
-        (product) => product.category?.slug === categoryFilter
-      );
-    }
-
     // Sort
     filtered.sort((a, b) => {
       let aValue: any, bValue: any;
 
       switch (sortBy) {
         case "name":
-          aValue = a.name;
-          bValue = b.name;
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
           break;
         case "price":
           aValue = a.sale_price || a.price;
@@ -168,9 +166,17 @@ export default function AdminProductsPage() {
           aValue = new Date(a.created_at).getTime();
           bValue = new Date(b.created_at).getTime();
           break;
+        // case "updated":
+        //   aValue = new Date(a.updated_at).getTime();
+        //   bValue = new Date(b.updated_at).getTime();
+        //   break;
+        case "rating":
+          aValue = a.rating;
+          bValue = b.rating;
+          break;
         default:
-          aValue = a.name;
-          bValue = b.name;
+          aValue = (a.name || "").toLowerCase();
+          bValue = (b.name || "").toLowerCase();
       }
 
       if (sortOrder === "asc") {
@@ -263,15 +269,38 @@ export default function AdminProductsPage() {
     document.body.removeChild(link);
   };
 
-  // const handleStatusChange = (productId: string, newStatus: string) => {
-  //   setProducts((prev) =>
-  //     prev.map((product) =>
-  //       product.id === productId
-  //         ? { ...product, status: newStatus as any }
-  //         : product
-  //     )
-  //   );
-  // };
+  const handleStatusChange = async (slug: string, newStatus: string) => {
+    try {
+      setProducts((prev) =>
+        prev.map((product) =>
+          product.slug === slug
+            ? { ...product, status: newStatus as any }
+            : product
+        )
+      );
+
+      const res = await fetch(`/api/products/${slug}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update product status");
+
+      toast({
+        title: "✅ Status updated",
+        description: `Product status changed to "${newStatus}"`,
+      });
+    } catch (error: any) {
+      console.error(error);
+      toast({
+        title: "❌ Error",
+        description: error.message || "Failed to update status",
+        variant: "destructive",
+      });
+      fetchProducts(); // revert UI
+    }
+  };
 
   if (loading) {
     return (
@@ -381,7 +410,9 @@ export default function AdminProductsPage() {
                     <SelectItem value="price">Price</SelectItem>
                     <SelectItem value="stock">Stock</SelectItem>
                     <SelectItem value="sales">Sales</SelectItem>
+                    <SelectItem value="rating">Rating</SelectItem>
                     <SelectItem value="created">Created</SelectItem>
+                    {/* <SelectItem value="updated">Updated</SelectItem> */}
                   </SelectContent>
                 </Select>
                 <Button
@@ -518,10 +549,10 @@ export default function AdminProductsPage() {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                      {/* <Select
+                      <Select
                         value={product.status}
                         onValueChange={(value) =>
-                          handleStatusChange(product.id, value)
+                          handleStatusChange(product.slug, value)
                         }
                       >
                         <SelectTrigger className="w-24 h-8 text-xs">
@@ -532,7 +563,7 @@ export default function AdminProductsPage() {
                           <SelectItem value="inactive">Inactive</SelectItem>
                           <SelectItem value="draft">Draft</SelectItem>
                         </SelectContent>
-                      </Select> */}
+                      </Select>
                     </div>
                   </div>
                 </CardContent>

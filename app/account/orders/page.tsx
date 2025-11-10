@@ -142,7 +142,9 @@ export default function OrdersPage() {
                           </CardTitle>
                           <p className="text-sm text-nike-gray-600">
                             Placed on{" "}
-                            {new Date(order.created_at).toLocaleDateString()}
+                            {new Date(
+                              order.created_at || Date.now()
+                            ).toLocaleDateString()}
                           </p>
                         </div>
                         <div className="flex items-center space-x-4">

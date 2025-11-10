@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { Product } from "@/types";
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { trackAddToCart } from "@/lib/analytics";
 
 const NewArrivals = () => {
   const [newProducts, setNewProducts] = useState<Product[]>([]);
@@ -37,6 +38,7 @@ const NewArrivals = () => {
 
     fetchNewArrivals();
   }, []);
+
 
   return (
     <section className="section-padding bg-white">

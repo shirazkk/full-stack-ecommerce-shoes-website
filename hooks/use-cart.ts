@@ -4,6 +4,7 @@ import React, { useState, useEffect, createContext, useContext, ReactNode } from
 import { Cart, CartItem, Product } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { getSession } from '@/lib/auth/client';
+import { trackAddToCart } from '@/lib/analytics';
 
 interface CartContextType {
   cart: Cart | null;
@@ -98,6 +99,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   };
+
 
   const removeFromCart = async (itemId: string) => {
     try {

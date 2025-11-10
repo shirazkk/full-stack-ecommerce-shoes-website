@@ -1,5 +1,4 @@
 import { Review } from "@/types";
-import { createClient } from "../supabase/client";
 import { supabaseAdmin } from "../supabase/supabaseAdmin";
 import { getUser } from "../auth/server";
 

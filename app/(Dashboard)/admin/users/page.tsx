@@ -133,7 +133,8 @@ export default function AdminUsersPage() {
                   <div className="flex items-center space-x-2">
                     <Clock className="h-4 w-4 text-nike-gray-400" />
                     <span>
-                      Joined {new Date(user.created_at).toLocaleDateString()}
+                      Joined{" "}
+                      {new Date(user.created_at || Date.now()).toLocaleDateString()}
                     </span>
                   </div>
 
@@ -191,7 +192,9 @@ export default function AdminUsersPage() {
                   <Clock className="h-4 w-4 text-nike-gray-400" />
                   <span>
                     Joined{" "}
-                    {new Date(selectedUser.created_at).toLocaleDateString()}
+                    {new Date(
+                      selectedUser.created_at || Date.now()
+                    ).toLocaleDateString()}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">

@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { CartProvider } from "@/hooks/use-cart";
 import { WishlistProvider } from "@/hooks/use-wishlist";
 import ClientLayoutShell from "@/components/ClientLayoutShell";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -87,6 +88,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Google Analytics script */}
+        <Script
+          strategy="afterInteractive"
+          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}`}
+        />
+        <Script id="ga-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}');
+          `}
+        </Script>
+      </head>
       <body className={inter.className}>
         <CartProvider>
           <WishlistProvider>

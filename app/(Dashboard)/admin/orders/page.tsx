@@ -24,15 +24,26 @@ import {
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 
+interface Profile {
+  id: string;
+  full_name?: string;
+  email?: string;
+  avatar_url?: string;
+  phone?: string;
+}
+
 interface Order {
   id: string;
   orderNumber: string;
-  customer: string;
-  email: string;
   amount: number;
   status: string;
   date: string;
   items: number;
+  shippingCustomer?: {
+    name: string;
+    email: string;
+  };
+  user?: Profile;
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -55,6 +66,7 @@ export default function AdminOrdersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const { toast } = useToast();
 
+  // Fetch orders + users
   const fetchOrders = async () => {
     try {
       setLoading(true);
@@ -66,22 +78,39 @@ export default function AdminOrdersPage() {
 
       const res = await fetch(`/api/orders?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch orders");
+
       const data = await res.json();
 
-      const formattedOrders: Order[] = data.orders.map((o: any) => ({
-        id: o.id,
-        orderNumber: o.order_number || `ORD-${o.id.slice(0, 8)}`,
-        customer: o.shipping_address.full_name || o.customer || "Unknown",
-        email: o.shipping_address.email || o.email || "N/A",
-        amount: o.total || o.amount || 0,
-        status: o.status || "pending",
-        date: o.created_at,
-        items: Array.isArray(o.order_items) ? o.order_items.length : 0,
-      }));
+      // Map orders and merge user info
+      const formattedOrders: Order[] = data.orders.map((o: any) => {
+        const user = data.users.find((u: any) => u.id === o.user_id);
+
+        return {
+          id: o.id,
+          orderNumber: o.order_number || `ORD-${o.id.slice(0, 8)}`,
+          amount: o.total || o.amount || 0,
+          status: o.status || "pending",
+          date: o.created_at,
+          items: Array.isArray(o.order_items) ? o.order_items.length : 0,
+          shippingCustomer: {
+            name: o.shipping_address?.full_name || "Unknown",
+            email: o.shipping_address?.email || "N/A",
+          },
+          user: user
+            ? {
+                id: user.id,
+                full_name: user.full_name || "Unknown",
+                email: user.email || "N/A",
+                avatar_url: user.avatar_url || "",
+                phone: user.phone || "",
+              }
+            : undefined,
+        };
+      });
 
       setOrders(formattedOrders);
       setFilteredOrders(formattedOrders);
-      setTotalPages(data.pagination.totalPages || 1);
+      setTotalPages(data.pagination?.totalPages || 1);
     } catch (err) {
       console.error("Error fetching orders:", err);
       toast({
@@ -98,7 +127,7 @@ export default function AdminOrdersPage() {
     fetchOrders();
   }, [page, statusFilter]);
 
-  // Filters & Sorting
+  // Filter & sort
   useEffect(() => {
     let filtered = [...orders];
 
@@ -106,8 +135,16 @@ export default function AdminOrdersPage() {
       filtered = filtered.filter(
         (order) =>
           order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          order.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          order.email.toLowerCase().includes(searchQuery.toLowerCase())
+          order.shippingCustomer?.name
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          order.shippingCustomer?.email
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          order.user?.full_name
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          order.user?.email?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -124,8 +161,8 @@ export default function AdminOrdersPage() {
           bValue = b.amount;
           break;
         case "customer":
-          aValue = a.customer;
-          bValue = b.customer;
+          aValue = a.shippingCustomer?.name || "";
+          bValue = b.shippingCustomer?.name || "";
           break;
         case "items":
           aValue = a.items;
@@ -173,11 +210,9 @@ export default function AdminOrdersPage() {
             Manage and track all customer orders
           </p>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={fetchOrders}>
-            <RefreshCw className="h-4 w-4 mr-2" /> Refresh
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" onClick={fetchOrders}>
+          <RefreshCw className="h-4 w-4 mr-2" /> Refresh
+        </Button>
       </motion.div>
 
       {/* Filters */}
@@ -241,8 +276,9 @@ export default function AdminOrdersPage() {
                 <tr className="border-b border-nike-gray-200">
                   <th className="text-left py-3 px-4 font-semibold">Order</th>
                   <th className="text-left py-3 px-4 font-semibold">
-                    Customer
+                    Customer (Shipping)
                   </th>
+                  <th className="text-left py-3 px-4 font-semibold">User</th>
                   <th className="text-left py-3 px-4 font-semibold">Status</th>
                   <th className="text-left py-3 px-4 font-semibold">Amount</th>
                   <th className="text-left py-3 px-4 font-semibold">Items</th>
@@ -259,15 +295,41 @@ export default function AdminOrdersPage() {
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                     className="border-b hover:bg-nike-gray-50"
                   >
-                    <td className="py-4 px-4">
-                      <p className="font-medium">{order.orderNumber}</p>
+                    <td className="py-4 px-4 font-medium">
+                      {order.orderNumber}
                     </td>
+
                     <td className="py-4 px-4">
-                      <p className="font-medium">{order.customer}</p>
+                      <p>{order.shippingCustomer?.name}</p>
                       <p className="text-sm text-nike-gray-600">
-                        {order.email}
+                        {order.shippingCustomer?.email}
                       </p>
                     </td>
+
+                    <td className="py-4 px-4">
+                      {order.user ? (
+                        <div className="flex items-center space-x-2">
+                          {order.user.avatar_url && (
+                            <img
+                              src={order.user.avatar_url}
+                              alt={order.user.full_name}
+                              className="h-6 w-6 rounded-full"
+                            />
+                          )}
+                          <div>
+                            <p className="font-medium">
+                              {order.user.full_name}
+                            </p>
+                            <p className="text-sm text-nike-gray-600">
+                              {order.user.email}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-400">No user info</p>
+                      )}
+                    </td>
+
                     <td className="py-4 px-4">
                       <Badge
                         className={
@@ -278,6 +340,7 @@ export default function AdminOrdersPage() {
                         {statusConfig[order.status]?.label || order.status}
                       </Badge>
                     </td>
+
                     <td className="py-4 px-4 font-semibold">
                       ${order.amount.toFixed(2)}
                     </td>
@@ -285,6 +348,7 @@ export default function AdminOrdersPage() {
                     <td className="py-4 px-4 text-nike-gray-600">
                       {new Date(order.date).toLocaleString()}
                     </td>
+
                     <td className="py-4 px-4 flex space-x-2">
                       <Button variant="ghost" size="sm" asChild>
                         <Link href={`/admin/orders/${order.id}`}>

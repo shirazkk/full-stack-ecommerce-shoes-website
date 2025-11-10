@@ -49,7 +49,7 @@ export default function AdminDashboard() {
             usersChange: 0,
           });
           setRecentOrders(
-            data.recentOrders.map((o) => ({
+            data.recentOrders.map((o: any) => ({
               id: o.id,
               orderNumber: o.order_number,
               customer: o.user_id, // optionally fetch name from users table
@@ -329,7 +329,10 @@ export default function AdminDashboard() {
             <CardContent>
               <div className="space-y-4">
                 {topProducts.map((product, index) => (
-                  <Link key={product.slug} href={`admin/products/${product.slug}`}>
+                  <Link
+                    key={product.slug}
+                    href={`admin/products/${product.slug}`}
+                  >
                     <motion.div
                       key={product.slug}
                       initial={{ opacity: 0, x: -20 }}

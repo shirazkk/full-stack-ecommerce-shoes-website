@@ -30,6 +30,7 @@ export class ProductService {
   static async getAllProducts(filters: ProductFilters = {}): Promise<ProductSearchResult> {
     const supabase = await createClient();
 
+
     let query = supabase
       .from('products')
       .select(`
@@ -162,6 +163,7 @@ export class ProductService {
         )
       `)
       .eq('is_featured', true)
+      .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -188,6 +190,7 @@ export class ProductService {
         )
       `)
       .eq('is_new', true)
+      .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -240,6 +243,7 @@ export class ProductService {
         )
       `)
       .eq('category_id', categoryId)
+      .eq('status', 'active')
       .neq('id', productId)
       .order('created_at', { ascending: false })
       .limit(limit);

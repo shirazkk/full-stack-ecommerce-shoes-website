@@ -253,7 +253,7 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle>Branding</CardTitle>
           <CardDescription>
-            Customize your store's visual identity
+            Customize your store`&apos;`s visual identity
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

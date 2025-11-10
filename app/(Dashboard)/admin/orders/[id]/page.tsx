@@ -21,7 +21,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { Order } from "@/types";
+import { OrderWithUser, Profile } from "@/types";
+
+type Status = keyof typeof statusConfig;
 
 const statusConfig = {
   pending: {
@@ -53,11 +55,11 @@ const statusConfig = {
 
 export default function AdminOrderPage() {
   const params = useParams();
-  const [order, setOrder] = useState<Order | null>(null);
+  const [order, setOrder] = useState<OrderWithUser | null>(null);
+  const [orderUser, setOrderUser] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState<Status>("pending");
 
-  // Fetch order details
   useEffect(() => {
     const fetchOrder = async () => {
       try {
@@ -65,11 +67,14 @@ export default function AdminOrderPage() {
         const res = await fetch(`/api/orders/${params.id}`);
         if (!res.ok) throw new Error("Failed to fetch order");
         const data = await res.json();
+
         setOrder(data.order);
-        setStatus(data.order.status);
+        setOrderUser(data.user);
+        setStatus(data.order.status as Status);
       } catch (err) {
         console.error(err);
         setOrder(null);
+        setOrderUser(null);
       } finally {
         setLoading(false);
       }
@@ -81,7 +86,7 @@ export default function AdminOrderPage() {
   const updateStatus = async (newStatus: string) => {
     if (!order) return;
     const previousStatus = status;
-    setStatus(newStatus);
+    setStatus(newStatus as Status);
 
     try {
       const res = await fetch(`/api/orders/${order.id}`, {
@@ -96,28 +101,23 @@ export default function AdminOrderPage() {
     }
   };
 
-  if (loading) {
+  if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-nike-gray-50">
-        <div className="animate-spin rounded-full h-20 w-20 border-b-2 border-nike-orange-500"></div>
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
       </div>
     );
-  }
-
-  if (!order) {
+  if (!order)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-nike-gray-50">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-nike-gray-900 mb-4">
-            Order Not Found
-          </h1>
+      <div className="min-h-screen flex items-center justify-center text-center">
+        <div>
+          <h1 className="text-2xl font-bold mb-4">Order Not Found</h1>
           <Button asChild>
             <Link href="/admin/orders">Back to Orders</Link>
           </Button>
         </div>
       </div>
     );
-  }
 
   const statusInfo = statusConfig[status];
   const StatusIcon = statusInfo.icon;
@@ -129,15 +129,15 @@ export default function AdminOrderPage() {
         <div className="mb-8">
           <Button variant="ghost" asChild className="mb-4">
             <Link href="/admin/orders">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Orders
+              <ArrowLeft className="h-4 w-4 mr-2" /> Back to Orders
             </Link>
           </Button>
-          <h1 className="text-4xl font-bold text-nike-gray-900 mb-2">
+          <h1 className="text-4xl font-bold mb-2">
             Order #{order.order_number}
           </h1>
           <p className="text-nike-gray-600">
-            Placed on {new Date(order.created_at).toLocaleDateString()}
+            Placed on{" "}
+            {new Date(order.created_at || Date.now()).toLocaleDateString()}
           </p>
         </div>
 
@@ -159,10 +159,8 @@ export default function AdminOrderPage() {
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <Badge className={statusInfo.color}>
-                      <StatusIcon className="h-3 w-3 mr-1" />
-                      {statusInfo.label}
+                      <StatusIcon className="h-3 w-3 mr-1" /> {statusInfo.label}
                     </Badge>
-                    {/* Admin change status */}
                     <select
                       value={status}
                       onChange={(e) => updateStatus(e.target.value)}
@@ -170,7 +168,7 @@ export default function AdminOrderPage() {
                     >
                       {Object.keys(statusConfig).map((s) => (
                         <option key={s} value={s}>
-                          {statusConfig[s].label}
+                          {statusConfig[s as Status].label}
                         </option>
                       ))}
                     </select>
@@ -233,33 +231,49 @@ export default function AdminOrderPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Summary */}
+            {/* Customer Info */}
             <Card>
               <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
+                <CardTitle>Customer Info</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="flex justify-between text-sm">
-                  <span>Subtotal</span>
-                  <span>${order.subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Shipping</span>
-                  <span>
-                    {order.shipping === 0
-                      ? "FREE"
-                      : `$${order.shipping.toFixed(2)}`}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Tax</span>
-                  <span>${order.tax.toFixed(2)}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between font-semibold text-lg">
-                  <span>Total</span>
-                  <span>${order.total.toFixed(2)}</span>
-                </div>
+              <CardContent className="space-y-4 text-sm">
+                {orderUser ? (
+                  <div className="flex items-center space-x-4">
+                    {/* Avatar or First Letter */}
+                    {orderUser.avatar_url ? (
+                      <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
+                        <Image
+                          src={orderUser.avatar_url}
+                          alt={orderUser.full_name || "User"}
+                          width={48}
+                          height={48}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-nike-orange-500 flex items-center justify-center text-white font-semibold text-lg">
+                        {orderUser.full_name?.charAt(0).toUpperCase() || "U"}
+                      </div>
+                    )}
+
+                    {/* User Info */}
+                    <div className="flex-1">
+                      <p className="font-semibold">
+                        {orderUser.full_name || "Unknown User"}
+                      </p>
+                      <p className="text-gray-600">
+                        {orderUser.email || "No email provided"}
+                      </p>
+                      {orderUser.phone && (
+                        <p className="text-gray-600">
+                          Phone: {orderUser.phone}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <p>Customer info not available</p>
+                )}
               </CardContent>
             </Card>
 
@@ -295,6 +309,36 @@ export default function AdminOrderPage() {
               </CardContent>
             </Card>
 
+            {/* Order Summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Order Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal</span>
+                  <span>${order.subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Shipping</span>
+                  <span>
+                    {order.shipping === 0
+                      ? "FREE"
+                      : `$${order.shipping.toFixed(2)}`}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Tax</span>
+                  <span>${order.tax.toFixed(2)}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between font-semibold text-lg">
+                  <span>Total</span>
+                  <span>${order.total.toFixed(2)}</span>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Admin Actions */}
             <Card>
               <CardHeader>
@@ -302,12 +346,10 @@ export default function AdminOrderPage() {
               </CardHeader>
               <CardContent className="space-y-2">
                 <Button variant="outline" className="w-full justify-start">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Order
+                  <Edit className="h-4 w-4 mr-2" /> Edit Order
                 </Button>
                 <Button variant="outline" className="w-full justify-start">
-                  <Package className="h-4 w-4 mr-2" />
-                  Track Package
+                  <Package className="h-4 w-4 mr-2" /> Track Package
                 </Button>
               </CardContent>
             </Card>

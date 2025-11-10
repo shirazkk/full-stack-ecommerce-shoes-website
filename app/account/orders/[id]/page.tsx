@@ -124,12 +124,15 @@ export default function OrderDetailPage() {
           </h1>
           <p className="text-nike-body text-nike-gray-600">
             Placed on{" "}
-            {new Date(order.created_at).toLocaleDateString("en-US", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
+            {new Date(order.created_at || Date.now()).toLocaleDateString(
+              "en-US",
+              {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }
+            )}
           </p>
         </div>
 
@@ -157,7 +160,9 @@ export default function OrderDetailPage() {
                     </Badge>
                     <p className="text-sm text-nike-gray-600">
                       Last updated:{" "}
-                      {new Date(order.updated_at).toLocaleDateString()}
+                      {new Date(
+                        order.updated_at || Date.now()
+                      ).toLocaleDateString()}
                     </p>
                   </div>
                 </CardContent>

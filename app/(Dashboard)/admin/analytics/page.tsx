@@ -1,13 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import Image from 'next/image';
-import { 
-  TrendingUp, 
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import Image from "next/image";
+import {
+  TrendingUp,
   TrendingDown,
   DollarSign,
   ShoppingCart,
@@ -16,8 +22,8 @@ import {
   Download,
   Calendar,
   BarChart3,
-  PieChart
-} from 'lucide-react';
+  PieChart,
+} from "lucide-react";
 
 interface AnalyticsData {
   revenue: {
@@ -52,7 +58,7 @@ interface AnalyticsData {
 export default function AdminAnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState('30d');
+  const [timeRange, setTimeRange] = useState("30d");
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -60,14 +66,16 @@ export default function AdminAnalyticsPage() {
         setLoading(true);
         // For now, we'll use placeholder data since analytics API might not exist
         // In a real app, you would call: `/api/analytics?timeRange=${timeRange}`
-        const response = await fetch(`/api/analytics?timeRange=${timeRange}`);
+        const response = await fetch(
+          `/api/admin/analytics?timeRange=${timeRange}`
+        );
         if (!response.ok) {
-          throw new Error('Failed to fetch analytics data');
+          throw new Error("Failed to fetch analytics data");
         }
         const analyticsData = await response.json();
         setData(analyticsData);
       } catch (error) {
-        console.error('Error fetching analytics:', error);
+        console.error("Error fetching analytics:", error);
         // Fallback to empty data structure
         setData({
           revenue: { total: 0, change: 0, chart: [] },
@@ -111,7 +119,9 @@ export default function AdminAnalyticsPage() {
         className="flex items-center justify-between"
       >
         <div>
-          <h1 className="text-3xl font-bold text-nike-gray-900">Analytics Dashboard</h1>
+          <h1 className="text-3xl font-bold text-nike-gray-900">
+            Analytics Dashboard
+          </h1>
           <p className="text-nike-gray-600 mt-2">
             Track your store&apos;s performance and key metrics
           </p>
@@ -146,7 +156,9 @@ export default function AdminAnalyticsPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-nike-gray-600">Total Revenue</p>
+                <p className="text-sm font-medium text-nike-gray-600">
+                  Total Revenue
+                </p>
                 <p className="text-2xl font-bold text-nike-gray-900">
                   ${data.revenue.total.toLocaleString()}
                 </p>
@@ -156,7 +168,13 @@ export default function AdminAnalyticsPage() {
                   ) : (
                     <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
                   )}
-                  <span className={`text-sm ${data.revenue.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <span
+                    className={`text-sm ${
+                      data.revenue.change > 0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
                     {Math.abs(data.revenue.change)}%
                   </span>
                 </div>
@@ -172,7 +190,9 @@ export default function AdminAnalyticsPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-nike-gray-600">Total Orders</p>
+                <p className="text-sm font-medium text-nike-gray-600">
+                  Total Orders
+                </p>
                 <p className="text-2xl font-bold text-nike-gray-900">
                   {data.orders.total.toLocaleString()}
                 </p>
@@ -182,7 +202,11 @@ export default function AdminAnalyticsPage() {
                   ) : (
                     <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
                   )}
-                  <span className={`text-sm ${data.orders.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <span
+                    className={`text-sm ${
+                      data.orders.change > 0 ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
                     {Math.abs(data.orders.change)}%
                   </span>
                 </div>
@@ -198,7 +222,9 @@ export default function AdminAnalyticsPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-nike-gray-600">Total Customers</p>
+                <p className="text-sm font-medium text-nike-gray-600">
+                  Total Customers
+                </p>
                 <p className="text-2xl font-bold text-nike-gray-900">
                   {data.customers.total.toLocaleString()}
                 </p>
@@ -208,7 +234,13 @@ export default function AdminAnalyticsPage() {
                   ) : (
                     <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
                   )}
-                  <span className={`text-sm ${data.customers.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <span
+                    className={`text-sm ${
+                      data.customers.change > 0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
                     {Math.abs(data.customers.change)}%
                   </span>
                 </div>
@@ -240,8 +272,12 @@ export default function AdminAnalyticsPage() {
               <div className="h-64 flex items-center justify-center bg-nike-gray-50 rounded-lg">
                 <div className="text-center">
                   <BarChart3 className="h-12 w-12 text-nike-gray-400 mx-auto mb-2" />
-                  <p className="text-nike-gray-600">Chart visualization would go here</p>
-                  <p className="text-sm text-nike-gray-500">Integration with Recharts or similar library</p>
+                  <p className="text-nike-gray-600">
+                    Chart visualization would go here
+                  </p>
+                  <p className="text-sm text-nike-gray-500">
+                    Integration with Recharts or similar library
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -324,16 +360,15 @@ export default function AdminAnalyticsPage() {
                       {product.name}
                     </h4>
                     <p className="text-sm text-nike-gray-600">
-                      {product.sales} sales • ${product.revenue.toFixed(2)} revenue
+                      {product.sales} sales • ${product.revenue.toFixed(2)}{" "}
+                      revenue
                     </p>
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-semibold text-nike-gray-900">
                       #{index + 1}
                     </div>
-                    <div className="text-sm text-nike-gray-600">
-                      Top Seller
-                    </div>
+                    <div className="text-sm text-nike-gray-600">Top Seller</div>
                   </div>
                 </motion.div>
               ))}

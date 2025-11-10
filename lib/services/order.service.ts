@@ -266,6 +266,16 @@ export async function getTotalOrdersCount(status?: string, userId?: string) {
   }
 }
 
+export async function getUserOrderCount(userId: string) {
+  const supabase = await createClient();
+  const { count, error } = await supabase.from('orders').select('id', { count: 'exact', head: true }).eq('user_id', userId);
+  if (error) {
+    console.error('Error fetching orders count:', error);
+    return 0;
+  }
+  return count || 0;
+}
+
 
 export async function getOrderId(orderId: string): Promise<Order | null> {
   const supabase = await supabaseAdmin();

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ProductService } from '@/lib/services/product.service';
-import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from '@/lib/supabase/supabaseAdmin';
+import { isAdmin } from '@/lib/auth/server';
 
 export async function GET(
   request: NextRequest,
@@ -9,12 +9,16 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
+    const admin = await isAdmin(); 
     const product = await ProductService.getProductBySlug(slug);
 
     if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
+    if (!admin && product.status !== 'active') {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
 
     return NextResponse.json({ product });
   } catch (error) {

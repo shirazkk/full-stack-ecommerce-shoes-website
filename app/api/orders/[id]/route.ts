@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getOrderById, updateOrderStatus } from '@/lib/services/order.service';
 import { getUser, isAdmin } from '@/lib/auth/server';
 import { ProductService } from '@/lib/services/product.service';
+import { supabaseAdmin } from '@/lib/supabase/supabaseAdmin';
+
 
 export async function GET(
   request: NextRequest,
@@ -27,7 +29,17 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    return NextResponse.json({ order });
+    // Fetch user info of the order owner
+    const supabase = supabaseAdmin();
+    const { data: orderUser, error: userError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', order.user_id)
+      .single();
+
+    if (userError) console.warn('Failed to fetch order user:', userError);
+
+    return NextResponse.json({ order, user: orderUser });
   } catch (error) {
     console.error('Error fetching order:', error);
     return NextResponse.json(

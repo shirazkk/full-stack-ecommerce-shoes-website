@@ -1,6 +1,5 @@
 import { ProductService } from "@/lib/services/product.service";
 import { ReviewService } from "@/lib/services/review.service";
-import { supabaseAdmin } from "@/lib/supabase/supabaseAdmin";
 import { NextRequest, NextResponse } from "next/server";
 
 

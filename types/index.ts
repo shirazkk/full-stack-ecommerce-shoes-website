@@ -94,10 +94,18 @@ export interface Order {
   total: number;
   stripe_payment_intent_id?: string;
   shipping_address: Address;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
   order_items?: OrderItem[];
 }
+
+
+
+// Extend your existing Order type
+export interface OrderWithUser extends Order {
+  user?: Profile;
+}
+
 
 export interface OrderItem {
   id: string;
@@ -159,7 +167,7 @@ export interface RecentOrder {
 
 export interface TopProduct {
   id: string;
-  slug:string;
+  slug: string;
   name: string;
   sales: number;
   revenue: number;

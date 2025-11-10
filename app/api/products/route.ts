@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ProductService } from '@/lib/services/product.service';
+import { isAdmin } from '@/lib/auth/server';
 
 
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
     const searchParams = url.searchParams;
-
     const filters = {
       category: searchParams.get('category') || undefined,
       brands: searchParams.getAll('brands') || undefined,
@@ -25,8 +25,13 @@ export async function GET(request: NextRequest) {
       status: (searchParams.get('status') as 'active' | 'inactive' | 'draft') || undefined,
     };
 
-    const result = await ProductService.getAllProducts(filters);
+    const admin = await isAdmin();
 
+    if (!admin) {
+      filters.status = 'active';
+    }
+
+    const result = await ProductService.getAllProducts(filters);
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching products:', error);

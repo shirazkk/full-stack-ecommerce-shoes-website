@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createOrder, getUserOrders, getAllOrders, getTotalOrdersCount } from '@/lib/services/order.service';
 import { getUser, isAdmin } from '@/lib/auth/server';
 import { Order } from '@/types';
-
+import { supabaseAdmin } from '@/lib/supabase/supabaseAdmin';
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,11 +30,17 @@ export async function GET(request: NextRequest) {
       totalOrdersCount = await getTotalOrdersCount(status || undefined, user.id);
     }
 
+    const userIds = orders.map(o => o.user_id);
+    const { data: users } = await supabaseAdmin()
+      .from("profiles")
+      .select("*")
+      .in("id", userIds);
+
     const totalPages = Math.ceil(totalOrdersCount / limit);
 
     return NextResponse.json({
       orders,
-      user,
+      users,
       pagination: {
         currentPage: page,
         totalPages,

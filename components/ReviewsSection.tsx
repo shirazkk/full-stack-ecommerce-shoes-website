@@ -371,7 +371,7 @@ export default function ReviewsSection({
                 {userReview && !editingReviewId ? (
                   <div className="text-center py-6 bg-muted/50 rounded-lg border border-border">
                     <p className="text-muted-foreground mb-3">
-                      You've already reviewed this product
+                      You`&apos;`ve already reviewed this product
                     </p>
                     <Button
                       variant="default"
