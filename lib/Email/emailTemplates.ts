@@ -10,7 +10,7 @@ export function orderSuccessTemplate(order: Order) {
   <ul>
     ${order.order_items!.map(
     (item) =>
-      `<li>${item.product} - ${item.quantity} × $${item.price} × {${item.color} × ${item.size}}</li>`
+      `<li>${item.product_id} - ${item.quantity} × $${item.price} × {${item.color} × ${item.size}}</li>`
   )
       .join('')}
   </ul>
@@ -29,7 +29,7 @@ export function paymentFailedTemplate(order: Order) {
   <ul>
     ${order.order_items!.map(
     (item) =>
-      `<li>${item.product} - ${item.quantity} × $${item.price} × {${item.color} × ${item.size}}</li>`
+      `<li>${item.product?.name} - ${item.quantity} × $${item.price} × {${item.color} × ${item.size}}</li>`
   )
       .join('')}
   </ul>

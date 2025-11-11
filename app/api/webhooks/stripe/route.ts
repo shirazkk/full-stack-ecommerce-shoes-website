@@ -47,7 +47,7 @@ export async function POST(req: Request) {
 
           if (order?.order_items) {
             for (const item of order.order_items) {
-              await ProductService.decreaseStock(item.product?.id!, item.quantity);
+              await ProductService.decreaseStock(item.product_id!, item.quantity);
               console.log("items" + item)
             }
           }
